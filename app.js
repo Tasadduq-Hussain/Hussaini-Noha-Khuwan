@@ -1,86 +1,156 @@
-const SUPABASE_URL =
-  "https://xxigwjuzfrffgznuajui.supabase.co";
+/* =========================================================
+   HUSSAINI NOHA KHUWAN
+   PUBLIC APP
+   ========================================================= */
 
-const SUPABASE_ANON_KEY =
-  "sb_publishable_DCnF_aVt833TFuGDHwtU8Q_cm17-dZn";
+const SUPABASE_URL = "https://xxigwjuzfrffgznuajui.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_DCnF_aVt833TFuGDHwtU8Q_cm17-dZn";
 
-let sb = null;
-let nohas = [];
-let activeCategory = "All";
-let deferredInstallPrompt = null;
+let supabaseClient = null;
+let nohay = [];
 
-let favorites = JSON.parse(
-  localStorage.getItem("hussainiFavorites") || "[]"
-);
+const demoNohay = [
+  {
+    id: "demo1",
+    title: "اب مجھے کوئی سکینہ نہیں کہتا بابا",
+    reciter: "Hussaini Noha Khuwan",
+    category: "Muharram",
+    keywords: "ab mujhe koi sakina nahi kehta baba sakina ali akbar",
+    image: "",
+    lyrics: ""
+  },
+  {
+    id: "demo2",
+    title: "علی اکبر علی اکبر",
+    reciter: "Hussaini Noha Khuwan",
+    category: "Muharram",
+    keywords: "ali akbar aliakbar akber",
+    image: "",
+    lyrics: ""
+  },
+  {
+    id: "demo3",
+    title: "واہ میرے لال",
+    reciter: "Hussaini Noha Khuwan",
+    category: "Muharram",
+    keywords: "wah mere lal",
+    image: "",
+    lyrics: ""
+  }
+];
 
-let viewerIndex = 0;
-let viewerZoom = 1;
-
-let isDragging = false;
-let dragStartX = 0;
-let dragStartY = 0;
-let panX = 0;
-let panY = 0;
-let lastTapTime = 0;
-let touchStartX = 0;
-let touchStartY = 0;
+const cats = [
+  "All",
+  "Muharram",
+  "Ayyam-e-Ali",
+  "Ayyam-e-Fatmiya",
+  "Other"
+];
 
 const $ = (selector) => document.querySelector(selector);
 
-
-/* =========================================================
-   BASIC HELPERS
-========================================================= */
-
-function esc(value = "") {
-  return String(value).replace(
-    /[&<>"']/g,
-    (m) =>
-      ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-      }[m])
-  );
+function escapeHtml(value = "") {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[char]));
 }
 
 
 /* =========================================================
-   SUPABASE
-========================================================= */
+   INITIALIZE
+   ========================================================= */
 
-function loadSupabase() {
-  return new Promise((resolve, reject) => {
-    if (window.supabase) {
-      resolve();
-      return;
-    }
+document.addEventListener("DOMContentLoaded", () => {
+
+  initializeApp();
+
+});
+
+
+async function initializeApp() {
+
+  /* Load Supabase library */
+  try {
 
     const script = document.createElement("script");
 
     script.src =
       "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
 
-    script.onload = resolve;
-    script.onerror = reject;
+    script.onload = async () => {
+
+      try {
+
+        supabaseClient =
+          window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY
+          );
+
+        await loadNohay();
+
+      } catch (error) {
+
+        console.warn("Supabase initialization failed:", error);
+
+        loadLocalData();
+
+      }
+
+    };
+
+    script.onerror = () => {
+
+      console.warn("Supabase library could not load.");
+
+      loadLocalData();
+
+    };
 
     document.head.appendChild(script);
-  });
+
+  } catch (error) {
+
+    console.warn(error);
+
+    loadLocalData();
+
+  }
+
+
+  setupSearch();
+
+  setupTheme();
+
+  setupModal();
+
+  setupInstall();
+
+  setupServiceWorker();
+
 }
 
 
-async function loadNohaData() {
+/* =========================================================
+   LOAD DATA
+   ========================================================= */
+
+async function loadNohay() {
+
+  loadLocalData();
+
+  if (!supabaseClient) return;
+
   try {
-    await loadSupabase();
 
-    sb = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY
-    );
-
-    const { data, error } = await sb
+    const {
+      data,
+      error
+    } = await supabaseClient
       .from("nohas")
       .select("*")
       .order("created_at", {
@@ -89,148 +159,624 @@ async function loadNohaData() {
 
     if (error) throw error;
 
-    nohas = data || [];
+    nohay = data || [];
 
     localStorage.setItem(
-      "hussainiNohaCache",
-      JSON.stringify(nohas)
+      "hnk_nohay",
+      JSON.stringify(nohay)
     );
 
     renderAll();
 
   } catch (error) {
 
-    console.error("Supabase error:", error);
+    console.warn(
+      "Offline/cache mode:",
+      error.message
+    );
+
+  }
+
+}
+
+
+function loadLocalData() {
+
+  try {
 
     const cached =
-      localStorage.getItem("hussainiNohaCache");
+      JSON.parse(
+        localStorage.getItem("hnk_nohay") || "null"
+      );
 
-    if (cached) {
-      try {
+    if (
+      Array.isArray(cached) &&
+      cached.length
+    ) {
 
-        nohas = JSON.parse(cached);
-
-        renderAll();
-
-      } catch {
-
-        showEmpty(
-          "featuredGrid",
-          "Noha data could not be loaded."
-        );
-
-      }
+      nohay = cached;
 
     } else {
 
-      showEmpty(
-        "featuredGrid",
-        "Noha data could not be loaded."
-      );
+      nohay = demoNohay;
 
     }
+
+  } catch (error) {
+
+    nohay = demoNohay;
+
   }
+
+  renderAll();
+
+}
+
+
+/* =========================================================
+   FILTERS
+   ========================================================= */
+
+function renderFilters() {
+
+  const filters = $("#filters");
+
+  if (!filters) return;
+
+  filters.innerHTML = cats
+    .map((category, index) => {
+
+      return `
+        <button
+          class="filter ${index === 0 ? "active" : ""}"
+          data-cat="${escapeHtml(category)}"
+          type="button"
+        >
+          ${escapeHtml(category)}
+        </button>
+      `;
+
+    })
+    .join("");
+
+
+  document
+    .querySelectorAll(".filter")
+    .forEach((button) => {
+
+      button.addEventListener("click", () => {
+
+        document
+          .querySelectorAll(".filter")
+          .forEach((item) => {
+
+            item.classList.remove("active");
+
+          });
+
+        button.classList.add("active");
+
+        const query =
+          $("#searchInput")?.value.trim() || "";
+
+        if (query) {
+
+          renderSearchResults(
+            button.dataset.cat,
+            query
+          );
+
+        } else {
+
+          renderFeatured(button.dataset.cat);
+
+          renderRecent(button.dataset.cat);
+
+        }
+
+      });
+
+    });
+
+}
+
+
+/* =========================================================
+   FIND / FILTER NOHAY
+   ========================================================= */
+
+function getFilteredNohay(
+  category = "All",
+  query = ""
+) {
+
+  const term =
+    query.trim().toLowerCase();
+
+  return nohay.filter((noha) => {
+
+    const categoryMatch =
+      category === "All" ||
+      noha.category === category;
+
+    if (!categoryMatch) return false;
+
+    if (!term) return true;
+
+    const searchableText = [
+
+      noha.title || "",
+      noha.reciter || "",
+      noha.keywords || "",
+      noha.category || ""
+
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return searchableText.includes(term);
+
+  });
+
+}
+
+
+/* =========================================================
+   RECOMMENDATION / FEATURED CARD
+   NO IMAGE HERE
+   ========================================================= */
+
+function recommendationCard(noha) {
+
+  return `
+    <article
+      class="card recommendation-card"
+      onclick="openNoha('${escapeHtml(noha.id)}')"
+    >
+
+      <div class="recommendation-icon">
+        ♪
+      </div>
+
+      <div class="card-body">
+
+        <div class="card-title">
+          ${escapeHtml(noha.title)}
+        </div>
+
+        <div class="meta">
+          ${escapeHtml(
+            noha.reciter ||
+            "Hussaini Noha Khuwan"
+          )}
+        </div>
+
+        <span class="tag">
+          ${escapeHtml(
+            noha.category || "Other"
+          )}
+        </span>
+
+      </div>
+
+    </article>
+  `;
+
+}
+
+
+/* =========================================================
+   FEATURED NOHAY
+   ========================================================= */
+
+function renderFeatured(
+  category = "All"
+) {
+
+  const grid =
+    $("#featuredGrid");
+
+  if (!grid) return;
+
+  const list =
+    getFilteredNohay(category, "");
+
+  const featured =
+    list.slice(0, 4);
+
+  if (!featured.length) {
+
+    grid.innerHTML = `
+      <div class="empty-favorites">
+        <h3>No Recommendations Yet</h3>
+        <p>
+          Nohay add hone ke baad yahan recommendations nazar aayengi.
+        </p>
+      </div>
+    `;
+
+    return;
+
+  }
+
+  grid.innerHTML =
+    featured
+      .map(recommendationCard)
+      .join("");
+
+}
+
+
+/* =========================================================
+   SEARCH RESULTS SECTION
+   ========================================================= */
+
+function ensureSearchResultsSection() {
+
+  let section =
+    $("#searchResultsSection");
+
+  if (section) return section;
+
+  const featured =
+    $("#featured");
+
+  if (!featured) return null;
+
+  section =
+    document.createElement("section");
+
+  section.id =
+    "searchResultsSection";
+
+  section.className =
+    "section search-results-section";
+
+  section.innerHTML = `
+    <div class="section-title">
+
+      <h2 id="searchResultsTitle">
+        Search Results
+      </h2>
+
+      <button
+        id="clearSearchResults"
+        class="secondary-action"
+        type="button"
+      >
+        Clear
+      </button>
+
+    </div>
+
+    <div
+      id="searchResultsGrid"
+      class="cards search-results-grid"
+    ></div>
+  `;
+
+  featured.insertAdjacentElement(
+    "afterend",
+    section
+  );
+
+
+  $("#clearSearchResults")
+    ?.addEventListener("click", () => {
+
+      if ($("#searchInput")) {
+
+        $("#searchInput").value = "";
+
+      }
+
+      section.classList.add("hidden");
+
+      const activeCategory =
+        document
+          .querySelector(".filter.active")
+          ?.dataset.cat || "All";
+
+      renderFeatured(activeCategory);
+
+      renderRecent(activeCategory);
+
+    });
+
+
+  return section;
+
+}
+
+
+/* =========================================================
+   SEARCH RESULT CARD
+   NO FULL IMAGE
+   ========================================================= */
+
+function searchResultCard(noha) {
+
+  return `
+    <article
+      class="card search-result-card"
+      onclick="openNoha('${escapeHtml(noha.id)}')"
+    >
+
+      <div class="search-result-content">
+
+        <div class="search-result-icon">
+          🔎
+        </div>
+
+        <div class="search-result-info">
+
+          <div class="card-title">
+            ${escapeHtml(noha.title)}
+          </div>
+
+          <div class="meta">
+            ${escapeHtml(
+              noha.reciter ||
+              "Hussaini Noha Khuwan"
+            )}
+          </div>
+
+          <span class="tag">
+            ${escapeHtml(
+              noha.category || "Other"
+            )}
+          </span>
+
+        </div>
+
+        <div class="search-result-arrow">
+          →
+        </div>
+
+      </div>
+
+    </article>
+  `;
+
+}
+
+
+/* =========================================================
+   RENDER SEARCH RESULTS
+   ========================================================= */
+
+function renderSearchResults(
+  category = "All",
+  query = ""
+) {
+
+  const section =
+    ensureSearchResultsSection();
+
+  if (!section) return;
+
+  const grid =
+    $("#searchResultsGrid");
+
+  const title =
+    $("#searchResultsTitle");
+
+  if (!grid || !title) return;
+
+  const list =
+    getFilteredNohay(
+      category,
+      query
+    );
+
+  title.textContent =
+    `Search Results (${list.length})`;
+
+  section.classList.remove("hidden");
+
+
+  if (!list.length) {
+
+    grid.innerHTML = `
+      <div class="empty-favorites">
+
+        <div class="empty-heart">
+          🔍
+        </div>
+
+        <h3>
+          No Noha Found
+        </h3>
+
+        <p>
+          "${escapeHtml(query)}" ke liye koi Noha nahi mila.
+        </p>
+
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  grid.innerHTML =
+    list
+      .map(searchResultCard)
+      .join("");
+
+}
+
+
+/* =========================================================
+   RECENT NOHAY
+   TEXT ONLY
+   ========================================================= */
+
+function renderRecent(
+  category = "All"
+) {
+
+  const recentList =
+    $("#recentList");
+
+  if (!recentList) return;
+
+  const list =
+    getFilteredNohay(
+      category,
+      ""
+    ).slice(0, 8);
+
+
+  if (!list.length) {
+
+    recentList.innerHTML = `
+      <p class="meta">
+        Noha nahi mila.
+      </p>
+    `;
+
+    return;
+
+  }
+
+
+  recentList.innerHTML =
+    list
+      .map((noha) => {
+
+        return `
+          <div
+            class="recent-item text-only-recent"
+            onclick="openNoha('${escapeHtml(noha.id)}')"
+          >
+
+            <div class="recent-text-icon">
+              ♪
+            </div>
+
+            <div class="recent-info">
+
+              <b>
+                ${escapeHtml(noha.title)}
+              </b>
+
+              <div class="meta">
+                ${escapeHtml(
+                  noha.reciter ||
+                  "Hussaini Noha Khuwan"
+                )}
+              </div>
+
+              <span class="tag">
+                ${escapeHtml(
+                  noha.category || "Other"
+                )}
+              </span>
+
+            </div>
+
+            <span class="recent-arrow">
+              →
+            </span>
+
+          </div>
+        `;
+
+      })
+      .join("");
+
 }
 
 
 /* =========================================================
    CATEGORIES
-========================================================= */
+   ========================================================= */
 
-function getCategories() {
-  return [
-    "All",
-    "Muharram",
-    "Ayyam-e-Ali",
-    "Ayyam-e-Fatmiya",
-    "Other"
-  ];
-}
+function renderCategories() {
 
+  const categoryList =
+    $("#categoryList");
 
-window.setCategory = function (category) {
+  if (!categoryList) return;
 
-  activeCategory = category;
+  const counts = {};
 
-  renderAll();
+  nohay.forEach((noha) => {
 
-  document
-    .getElementById("featured")
-    ?.scrollIntoView({
-      behavior: "smooth"
-    });
-};
+    const category =
+      noha.category || "Other";
+
+    counts[category] =
+      (counts[category] || 0) + 1;
+
+  });
 
 
-function renderFilters() {
+  categoryList.innerHTML =
+    cats
+      .slice(1)
+      .map((category) => {
 
-  const container = $("#filters");
+        return `
+          <div
+            class="cat"
+            onclick="selectCategory('${escapeHtml(category)}')"
+          >
 
-  if (!container) return;
+            <span>
+              ${escapeHtml(category)}
+            </span>
 
-  container.innerHTML =
-    getCategories()
-      .map(
-        (category) => `
-        <button
-          class="${activeCategory === category ? "active" : ""}"
-          onclick="setCategory('${esc(category)}')">
-          ${esc(category)}
-        </button>
-      `
-      )
+            <span class="count">
+              ${counts[category] || 0}
+            </span>
+
+          </div>
+        `;
+
+      })
       .join("");
+
 }
 
 
 /* =========================================================
-   FILTER / SEARCH
-========================================================= */
+   CATEGORY CLICK
+   ========================================================= */
 
-function filteredNohay() {
+window.selectCategory =
+function(category) {
 
-  let result = [...nohas];
-
-  if (activeCategory !== "All") {
-
-    result = result.filter(
-      (n) =>
-        String(n.category || "Other")
-          .toLowerCase() ===
-        activeCategory.toLowerCase()
+  const button =
+    document.querySelector(
+      `.filter[data-cat="${CSS.escape(category)}"]`
     );
+
+  if (button) {
+
+    button.click();
+
   }
 
-  const input = $("#searchInput");
+  const categories =
+    $("#categories");
 
-  const query = input
-    ? input.value.trim().toLowerCase()
-    : "";
+  if (categories) {
 
-  if (query) {
-
-    result = result.filter((n) => {
-
-      const title =
-        String(n.title || "").toLowerCase();
-
-      const keywords =
-        String(n.keywords || "").toLowerCase();
-
-      const category =
-        String(n.category || "").toLowerCase();
-
-      return (
-        title.includes(query) ||
-        keywords.includes(query) ||
-        category.includes(query)
-      );
+    categories.scrollIntoView({
+      behavior: "smooth"
     });
+
   }
 
-  return result;
-}
+};
 
+
+/* =========================================================
+   RENDER EVERYTHING
+   ========================================================= */
 
 function renderAll() {
 
@@ -242,349 +788,134 @@ function renderAll() {
 
   renderCategories();
 
-  renderFavorites();
 }
 
 
 /* =========================================================
-   FEATURED
-========================================================= */
+   SEARCH
+   ========================================================= */
 
-function renderFeatured() {
+function performSearch() {
 
-  const container = $("#featuredGrid");
+  const query =
+    $("#searchInput")?.value.trim() || "";
 
-  if (!container) return;
+  const activeCategory =
+    document
+      .querySelector(".filter.active")
+      ?.dataset.cat || "All";
 
-  const items =
-    filteredNohay().slice(0, 6);
 
-  if (!items.length) {
+  if (!query) {
 
-    showEmpty(
-      "featuredGrid",
-      "No Nohay found."
-    );
+    const section =
+      $("#searchResultsSection");
+
+    if (section) {
+
+      section.classList.add("hidden");
+
+    }
+
+    renderFeatured(activeCategory);
+
+    renderRecent(activeCategory);
 
     return;
+
   }
 
-  container.innerHTML =
-    items.map(nohaCard).join("");
-}
 
-
-/* =========================================================
-   NOHA CARD
-========================================================= */
-
-function nohaCard(noha) {
-
-  const liked =
-    isFavorite(noha.id);
-
-  const image =
-    noha.image_url || "logo.png";
-
-  return `
-    <article
-      class="noha-card"
-      onclick="openNohaById('${esc(noha.id)}')">
-
-      <div class="card-image">
-
-        <img
-          src="${esc(image)}"
-          alt="${esc(noha.title)}"
-          loading="lazy">
-
-        <button
-          class="card-heart ${liked ? "liked" : ""}"
-          onclick="
-            event.stopPropagation();
-            toggleFavorite('${esc(noha.id)}')
-          "
-          title="${
-            liked
-              ? "Remove from favorites"
-              : "Add to favorites"
-          }">
-
-          ${liked ? "♥" : "♡"}
-
-        </button>
-
-      </div>
-
-      <div class="card-body">
-
-        <div class="card-category">
-          ${esc(noha.category || "Other")}
-        </div>
-
-        <h3>
-          ${esc(noha.title || "Untitled Noha")}
-        </h3>
-
-        <span class="read-more">
-          Open Noha →
-        </span>
-
-      </div>
-
-    </article>
-  `;
-}
-
-
-/* =========================================================
-   RECENT
-========================================================= */
-
-function renderRecent() {
-
-  const container = $("#recentList");
-
-  if (!container) return;
-
-  const items =
-    filteredNohay().slice(0, 10);
-
-  if (!items.length) {
-
-    showEmpty(
-      "recentList",
-      "No recent Nohay found."
-    );
-
-    return;
-  }
-
-  container.innerHTML =
-    items
-      .map(
-        (noha) => `
-        <div
-          class="recent-item"
-          onclick="openNohaById('${esc(noha.id)}')">
-
-          <img
-            src="${esc(
-              noha.image_url || "logo.png"
-            )}"
-            alt=""
-            loading="lazy">
-
-          <div>
-
-            <b>
-              ${esc(noha.title)}
-            </b>
-
-            <small>
-              ${esc(noha.category || "Other")}
-            </small>
-
-          </div>
-
-          <span>→</span>
-
-        </div>
-      `
-      )
-      .join("");
-}
-
-
-/* =========================================================
-   CATEGORY LIST
-========================================================= */
-
-function renderCategories() {
-
-  const container =
-    $("#categoryList");
-
-  if (!container) return;
-
-  container.innerHTML =
-    getCategories()
-      .filter((c) => c !== "All")
-      .map((category) => {
-
-        const count =
-          nohas.filter(
-            (n) =>
-              String(n.category || "Other")
-                .toLowerCase() ===
-              category.toLowerCase()
-          ).length;
-
-        return `
-          <button
-            class="category-row"
-            onclick="
-              setCategory('${esc(category)}')
-            ">
-
-            <span>
-              ${esc(category)}
-            </span>
-
-            <b>
-              ${count}
-            </b>
-
-          </button>
-        `;
-
-      })
-      .join("");
-}
-
-
-/* =========================================================
-   FAVORITES
-========================================================= */
-
-function saveFavorites() {
-
-  localStorage.setItem(
-    "hussainiFavorites",
-    JSON.stringify(favorites)
+  renderSearchResults(
+    activeCategory,
+    query
   );
+
+
+  const results =
+    $("#searchResultsSection");
+
+  if (results) {
+
+    setTimeout(() => {
+
+      results.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+
+    }, 80);
+
+  }
+
 }
 
 
-function isFavorite(id) {
+function setupSearch() {
 
-  return favorites.includes(
-    String(id)
-  );
-}
+  const input =
+    $("#searchInput");
 
+  const button =
+    $("#searchBtn");
 
-window.toggleFavorite = function (id) {
+  if (button) {
 
-  id = String(id);
-
-  if (isFavorite(id)) {
-
-    favorites =
-      favorites.filter(
-        (item) => item !== id
-      );
-
-  } else {
-
-    favorites.push(id);
-  }
-
-  saveFavorites();
-
-  renderAll();
-
-  const modal = $("#modal");
-
-  if (
-    modal &&
-    !modal.classList.contains("hidden")
-  ) {
-
-    openNohaById(id, false);
-  }
-};
-
-
-function renderFavorites() {
-
-  const container =
-    $("#favoritesGrid");
-
-  const count =
-    $("#favoriteCount");
-
-  if (!container) return;
-
-  const items =
-    nohas.filter(
-      (n) => isFavorite(n.id)
+    button.addEventListener(
+      "click",
+      performSearch
     );
 
-  if (count) {
-
-    count.textContent =
-      `${items.length} saved`;
   }
 
-  if (!items.length) {
 
-    container.innerHTML = `
-      <div class="empty-favorites">
+  if (input) {
 
-        <div class="empty-heart">
-          ♡
-        </div>
+    input.addEventListener(
+      "keydown",
+      (event) => {
 
-        <h3>
-          No Favorites Yet
-        </h3>
+        if (event.key === "Enter") {
 
-        <p>
-          Tap the heart on any Noha
-          to save it here.
-        </p>
+          event.preventDefault();
 
-      </div>
-    `;
+          performSearch();
 
-    return;
+        }
+
+      }
+    );
+
   }
 
-  container.innerHTML =
-    items.map(nohaCard).join("");
 }
 
 
 /* =========================================================
-   OPEN NOHA
-========================================================= */
+   NOHA DETAIL
+   FULL IMAGE ONLY HERE
+   ========================================================= */
 
-window.openNohaById =
-function (id, scrollTop = true) {
+window.openNoha =
+function(id) {
 
   const noha =
-    nohas.find(
-      (n) =>
-        String(n.id) === String(id)
+    nohay.find(
+      (item) =>
+        String(item.id) === String(id)
     );
 
   if (!noha) return;
 
-  openNoha(
-    noha,
-    scrollTop
-  );
-};
 
-
-function openNoha(
-  noha,
-  scrollTop = true
-) {
-
-  const modal = $("#modal");
+  const modal =
+    $("#modal");
 
   const content =
     $("#modalContent");
 
   if (!modal || !content) return;
 
-  const liked =
-    isFavorite(noha.id);
-
-  const image =
-    noha.image_url || "logo.png";
 
   content.innerHTML = `
 
@@ -595,94 +926,83 @@ function openNoha(
         <div>
 
           <span class="detail-category">
-            ${esc(
+            ${escapeHtml(
               noha.category || "Other"
             )}
           </span>
 
           <h2>
-            ${esc(
-              noha.title ||
-              "Untitled Noha"
-            )}
+            ${escapeHtml(noha.title)}
           </h2>
 
         </div>
 
-        <button
-          class="detail-favorite ${
-            liked ? "liked" : ""
-          }"
-          onclick="
-            toggleFavorite('${esc(noha.id)}')
-          ">
-
-          ${liked ? "♥" : "♡"}
-
-          <span>
-            ${liked ? "Saved" : "Save"}
-          </span>
-
-        </button>
-
       </div>
 
 
-      <div
-        class="lyrics-viewer"
-        onclick="
-          openImageViewer('${esc(noha.id)}')
-        ">
+      ${
+        noha.image
+          ? `
+            <div class="lyrics-viewer">
 
-        <img
-          src="${esc(image)}"
-          alt="${esc(noha.title)}">
+              <img
+                src="${escapeHtml(noha.image)}"
+                alt="Lyrics"
+                onclick="openFullscreenImage('${escapeHtml(noha.id)}')"
+              >
 
-      </div>
+            </div>
+          `
+          : `
+            <div class="empty-favorites">
+
+              <div class="empty-heart">
+                ♪
+              </div>
+
+              <h3>
+                Lyrics image available nahi hai
+              </h3>
+
+            </div>
+          `
+      }
 
 
       <div class="detail-actions">
-
-        <button
-          class="primary"
-          onclick="
-            downloadImage(
-              '${esc(image)}',
-              '${esc(noha.title)}'
-            )
-          ">
-
-          ↓ Download Image
-
-        </button>
-
-
-        <button
-          class="secondary-action"
-          onclick="
-            shareNoha('${esc(noha.id)}')
-          ">
-
-          ↗ Share
-
-        </button>
-
 
         ${
           noha.lyrics
             ? `
               <button
                 class="secondary-action"
-                onclick="
-                  copyLyrics('${esc(noha.id)}')
-                ">
-
-                ⧉ Copy Lyrics
-
+                onclick="copyLyrics('${escapeHtml(noha.id)}')"
+              >
+                📋 Copy Lyrics
               </button>
             `
             : ""
         }
+
+        ${
+          noha.image
+            ? `
+              <button
+                class="secondary-action"
+                onclick="downloadLyricsImage('${escapeHtml(noha.id)}')"
+              >
+                ⬇ Download Image
+              </button>
+            `
+            : ""
+        }
+
+        <button
+          class="secondary-action"
+          onclick="shareNoha('${escapeHtml(noha.id)}')"
+        >
+          ↗ Share
+        </button>
 
       </div>
 
@@ -696,16 +1016,8 @@ function openNoha(
                 Urdu Lyrics
               </div>
 
-              <div
-                class="typed-lyrics-text">
-
-                ${esc(
-                  noha.lyrics
-                ).replace(
-                  /\n/g,
-                  "<br>"
-                )}
-
+              <div class="typed-lyrics-text">
+                ${escapeHtml(noha.lyrics)}
               </div>
 
             </div>
@@ -714,648 +1026,251 @@ function openNoha(
       }
 
     </div>
+
   `;
 
-  modal.classList.remove(
-    "hidden"
-  );
+
+  modal.classList.remove("hidden");
 
   document.body.classList.add(
     "modal-open"
   );
 
-  if (scrollTop) {
-
-    const box =
-      modal.querySelector(
-        ".modal-box"
-      );
-
-    if (box) {
-      box.scrollTop = 0;
-    }
-  }
-}
+};
 
 
 /* =========================================================
-   FULLSCREEN IMAGE VIEWER
-========================================================= */
+   FULLSCREEN IMAGE
+   ========================================================= */
 
-window.openImageViewer =
-function (id) {
+window.openFullscreenImage =
+function(id) {
 
-  const index =
-    nohas.findIndex(
-      (n) =>
-        String(n.id) ===
-        String(id)
+  const noha =
+    nohay.find(
+      (item) =>
+        String(item.id) === String(id)
     );
 
-  if (index === -1) return;
+  if (!noha || !noha.image) return;
 
-  viewerIndex = index;
 
-  viewerZoom = 1;
+  let viewer =
+    document.getElementById(
+      "simpleImageViewer"
+    );
 
-  panX = 0;
 
-  panY = 0;
+  if (!viewer) {
 
-  updateImageViewer();
+    viewer =
+      document.createElement("div");
 
-  const viewer =
-    $("#imageViewer");
+    viewer.id =
+      "simpleImageViewer";
 
-  if (!viewer) return;
+    viewer.innerHTML = `
+
+      <button
+        type="button"
+        class="image-viewer-close"
+        id="simpleImageClose"
+      >
+        ×
+      </button>
+
+      <div class="image-viewer-content">
+
+        <img
+          id="simpleFullImage"
+          alt="Lyrics"
+        >
+
+      </div>
+
+    `;
+
+    viewer.className =
+      "image-viewer";
+
+    document.body.appendChild(viewer);
+
+
+    $("#simpleImageClose")
+      .addEventListener(
+        "click",
+        () => {
+
+          viewer.classList.add(
+            "hidden"
+          );
+
+        }
+      );
+
+
+    viewer.addEventListener(
+      "click",
+      (event) => {
+
+        if (
+          event.target === viewer ||
+          event.target.classList.contains(
+            "image-viewer-content"
+          )
+        ) {
+
+          viewer.classList.add(
+            "hidden"
+          );
+
+        }
+
+      }
+    );
+
+  }
+
+
+  const image =
+    $("#simpleFullImage");
+
+  image.src =
+    noha.image;
 
   viewer.classList.remove(
     "hidden"
   );
 
-  document.body.classList.add(
-    "modal-open"
-  );
 };
-
-
-function updateImageViewer() {
-
-  const noha =
-    nohas[viewerIndex];
-
-  if (!noha) return;
-
-  const image =
-    $("#fullLyricsImage");
-
-  if (!image) return;
-
-  image.src =
-    noha.image_url ||
-    "logo.png";
-
-  image.alt =
-    noha.title ||
-    "Lyrics";
-
-  viewerZoom = 1;
-
-  panX = 0;
-
-  panY = 0;
-
-  updateZoom();
-}
-
-
-function updateZoom() {
-
-  const image =
-    $("#fullLyricsImage");
-
-  const level =
-    $("#zoomLevel");
-
-  if (!image) return;
-
-  image.style.transform =
-    `translate(${panX}px, ${panY}px) scale(${viewerZoom})`;
-
-  if (level) {
-
-    level.textContent =
-      `${Math.round(
-        viewerZoom * 100
-      )}%`;
-  }
-}
-
-
-/* =========================================================
-   ZOOM BUTTONS
-========================================================= */
-
-$("#zoomIn")?.addEventListener(
-  "click",
-  (event) => {
-
-    event.stopPropagation();
-
-    viewerZoom =
-      Math.min(
-        viewerZoom + 0.25,
-        3
-      );
-
-    updateZoom();
-  }
-);
-
-
-$("#zoomOut")?.addEventListener(
-  "click",
-  (event) => {
-
-    event.stopPropagation();
-
-    viewerZoom =
-      Math.max(
-        viewerZoom - 0.25,
-        0.5
-      );
-
-    if (viewerZoom === 1) {
-
-      panX = 0;
-      panY = 0;
-    }
-
-    updateZoom();
-  }
-);
-
-
-/* =========================================================
-   PREVIOUS / NEXT
-========================================================= */
-
-$("#prevNoha")?.addEventListener(
-  "click",
-  (event) => {
-
-    event.stopPropagation();
-
-    if (!nohas.length) return;
-
-    viewerIndex--;
-
-    if (viewerIndex < 0) {
-
-      viewerIndex =
-        nohas.length - 1;
-    }
-
-    updateImageViewer();
-  }
-);
-
-
-$("#nextNoha")?.addEventListener(
-  "click",
-  (event) => {
-
-    event.stopPropagation();
-
-    if (!nohas.length) return;
-
-    viewerIndex++;
-
-    if (
-      viewerIndex >=
-      nohas.length
-    ) {
-
-      viewerIndex = 0;
-    }
-
-    updateImageViewer();
-  }
-);
-
-
-/* =========================================================
-   CLOSE IMAGE VIEWER
-========================================================= */
-
-$("#closeImageViewer")
-  ?.addEventListener(
-    "click",
-    (event) => {
-
-      event.stopPropagation();
-
-      closeImageViewer();
-    }
-  );
-
-
-function closeImageViewer() {
-
-  const viewer =
-    $("#imageViewer");
-
-  if (!viewer) return;
-
-  viewer.classList.add(
-    "hidden"
-  );
-
-  viewerZoom = 1;
-
-  panX = 0;
-
-  panY = 0;
-}
-
-
-$("#imageViewer")
-  ?.addEventListener(
-    "click",
-    (event) => {
-
-      if (
-        event.target ===
-        $("#imageViewer")
-      ) {
-
-        closeImageViewer();
-      }
-    }
-  );
-
-
-/* =========================================================
-   MOUSE DRAG / PAN
-========================================================= */
-
-const fullImage =
-  $("#fullLyricsImage");
-
-
-fullImage?.addEventListener(
-  "mousedown",
-  (event) => {
-
-    if (viewerZoom <= 1) return;
-
-    event.preventDefault();
-
-    isDragging = true;
-
-    dragStartX =
-      event.clientX - panX;
-
-    dragStartY =
-      event.clientY - panY;
-  }
-);
-
-
-document.addEventListener(
-  "mousemove",
-  (event) => {
-
-    if (!isDragging) return;
-
-    panX =
-      event.clientX -
-      dragStartX;
-
-    panY =
-      event.clientY -
-      dragStartY;
-
-    updateZoom();
-  }
-);
-
-
-document.addEventListener(
-  "mouseup",
-  () => {
-
-    isDragging = false;
-  }
-);
-
-
-/* =========================================================
-   DOUBLE CLICK ZOOM
-========================================================= */
-
-fullImage?.addEventListener(
-  "dblclick",
-  (event) => {
-
-    event.preventDefault();
-
-    if (viewerZoom === 1) {
-
-      viewerZoom = 2;
-
-    } else {
-
-      viewerZoom = 1;
-
-      panX = 0;
-
-      panY = 0;
-    }
-
-    updateZoom();
-  }
-);
-
-
-/* =========================================================
-   MOBILE TOUCH
-========================================================= */
-
-fullImage?.addEventListener(
-  "touchstart",
-  (event) => {
-
-    if (!event.touches.length)
-      return;
-
-    const touch =
-      event.touches[0];
-
-    touchStartX =
-      touch.clientX;
-
-    touchStartY =
-      touch.clientY;
-
-    const now =
-      Date.now();
-
-    if (
-      now - lastTapTime <
-      300
-    ) {
-
-      if (viewerZoom === 1) {
-
-        viewerZoom = 2;
-
-      } else {
-
-        viewerZoom = 1;
-
-        panX = 0;
-
-        panY = 0;
-      }
-
-      updateZoom();
-    }
-
-    lastTapTime = now;
-
-    if (viewerZoom > 1) {
-
-      isDragging = true;
-
-      dragStartX =
-        touch.clientX - panX;
-
-      dragStartY =
-        touch.clientY - panY;
-    }
-  },
-  {
-    passive: true
-  }
-);
-
-
-fullImage?.addEventListener(
-  "touchmove",
-  (event) => {
-
-    if (
-      !isDragging ||
-      viewerZoom <= 1
-    ) return;
-
-    const touch =
-      event.touches[0];
-
-    panX =
-      touch.clientX -
-      dragStartX;
-
-    panY =
-      touch.clientY -
-      dragStartY;
-
-    updateZoom();
-
-    event.preventDefault();
-
-  },
-  {
-    passive: false
-  }
-);
-
-
-fullImage?.addEventListener(
-  "touchend",
-  (event) => {
-
-    if (!event.changedTouches.length)
-      return;
-
-    const touch =
-      event.changedTouches[0];
-
-    const deltaX =
-      touch.clientX -
-      touchStartX;
-
-    const deltaY =
-      touch.clientY -
-      touchStartY;
-
-    isDragging = false;
-
-
-    /*
-      Swipe only when image
-      is not zoomed.
-    */
-
-    if (
-      viewerZoom === 1 &&
-      Math.abs(deltaX) > 70 &&
-      Math.abs(deltaX) >
-        Math.abs(deltaY)
-    ) {
-
-      if (deltaX < 0) {
-
-        $("#nextNoha")?.click();
-
-      } else {
-
-        $("#prevNoha")?.click();
-      }
-    }
-
-  },
-  {
-    passive: true
-  }
-);
-
-
-/* =========================================================
-   KEYBOARD CONTROLS
-========================================================= */
-
-document.addEventListener(
-  "keydown",
-  (event) => {
-
-    const viewer =
-      $("#imageViewer");
-
-    if (
-      viewer &&
-      !viewer.classList.contains(
-        "hidden"
-      )
-    ) {
-
-      if (
-        event.key ===
-        "Escape"
-      ) {
-
-        closeImageViewer();
-      }
-
-      if (
-        event.key ===
-        "ArrowLeft"
-      ) {
-
-        $("#prevNoha")?.click();
-      }
-
-      if (
-        event.key ===
-        "ArrowRight"
-      ) {
-
-        $("#nextNoha")?.click();
-      }
-
-      if (
-        event.key === "+" ||
-        event.key === "="
-      ) {
-
-        $("#zoomIn")?.click();
-      }
-
-      if (
-        event.key === "-"
-      ) {
-
-        $("#zoomOut")?.click();
-      }
-
-      return;
-    }
-
-    if (
-      event.key ===
-      "Escape"
-    ) {
-
-      closeModal();
-    }
-  }
-);
 
 
 /* =========================================================
    DOWNLOAD IMAGE
-========================================================= */
+   ========================================================= */
 
-window.downloadImage =
-async function (
-  imageUrl,
-  title
-) {
+window.downloadLyricsImage =
+async function(id) {
 
-  if (!imageUrl) return;
+  const noha =
+    nohay.find(
+      (item) =>
+        String(item.id) === String(id)
+    );
+
+  if (!noha || !noha.image) return;
+
 
   try {
 
     const response =
-      await fetch(imageUrl);
-
-    if (!response.ok)
-      throw new Error(
-        "Download failed"
-      );
+      await fetch(noha.image);
 
     const blob =
       await response.blob();
 
     const url =
-      URL.createObjectURL(
-        blob
-      );
+      URL.createObjectURL(blob);
 
-    const a =
-      document.createElement(
-        "a"
-      );
+    const link =
+      document.createElement("a");
 
-    a.href = url;
+    link.href = url;
 
-    a.download =
-      `${title || "Noha"}-Lyrics.jpg`;
+    link.download =
+      `${(noha.title || "noha")
+        .replace(/[\\/:*?"<>|]/g, "_")
+      }.jpg`;
 
-    document.body.appendChild(a);
+    document.body.appendChild(link);
 
-    a.click();
+    link.click();
 
-    a.remove();
+    link.remove();
 
     URL.revokeObjectURL(url);
 
-  } catch {
+  } catch (error) {
 
+    /* Fallback */
     window.open(
-      imageUrl,
+      noha.image,
       "_blank"
     );
+
   }
+
+};
+
+
+/* =========================================================
+   COPY LYRICS
+   ========================================================= */
+
+window.copyLyrics =
+async function(id) {
+
+  const noha =
+    nohay.find(
+      (item) =>
+        String(item.id) === String(id)
+    );
+
+  if (!noha) return;
+
+
+  const text =
+    noha.lyrics ||
+    noha.title ||
+    "";
+
+
+  try {
+
+    await navigator.clipboard.writeText(
+      text
+    );
+
+    alert("Lyrics copied!");
+
+  } catch (error) {
+
+    alert(
+      "Copy nahi ho saka."
+    );
+
+  }
+
 };
 
 
 /* =========================================================
    SHARE
-========================================================= */
+   ========================================================= */
 
 window.shareNoha =
-async function (id) {
+async function(id) {
 
   const noha =
-    nohas.find(
-      (n) =>
-        String(n.id) ===
-        String(id)
+    nohay.find(
+      (item) =>
+        String(item.id) === String(id)
     );
 
   if (!noha) return;
 
-  const data = {
+
+  const shareData = {
 
     title: noha.title,
 
     text:
-      `Hussaini Noha Khuwan - ${noha.title}`,
+      noha.lyrics ||
+      noha.title,
 
     url:
       window.location.href
+
   };
 
 
@@ -1366,382 +1281,125 @@ async function (id) {
     ) {
 
       await navigator.share(
-        data
+        shareData
       );
 
     } else {
 
-      await navigator.clipboard
-        .writeText(
-          window.location.href
-        );
+      await navigator.clipboard.writeText(
+        window.location.href
+      );
 
       alert(
-        "Noha link copied!"
+        "Link copied!"
       );
+
     }
 
-  } catch {
+  } catch (error) {
 
-    console.log(
-      "Share cancelled"
+    console.warn(
+      "Share cancelled:",
+      error
     );
+
   }
+
 };
 
 
 /* =========================================================
-   COPY LYRICS
-========================================================= */
+   MODAL
+   ========================================================= */
 
-window.copyLyrics =
-async function (id) {
+function setupModal() {
 
-  const noha =
-    nohas.find(
-      (n) =>
-        String(n.id) ===
-        String(id)
+  const closeButton =
+    $("#closeModal");
+
+  const modal =
+    $("#modal");
+
+
+  if (closeButton) {
+
+    closeButton.addEventListener(
+      "click",
+      closeModal
     );
 
-  if (
-    !noha ||
-    !noha.lyrics
-  ) return;
-
-
-  try {
-
-    await navigator.clipboard
-      .writeText(
-        noha.lyrics
-      );
-
-    alert(
-      "Lyrics copied!"
-    );
-
-  } catch {
-
-    alert(
-      "Lyrics could not be copied."
-    );
   }
-};
 
 
-/* =========================================================
-   MAIN MODAL
-========================================================= */
+  if (modal) {
 
-$("#closeModal")
-  ?.addEventListener(
-    "click",
-    closeModal
-  );
+    modal.addEventListener(
+      "click",
+      (event) => {
+
+        if (
+          event.target === modal
+        ) {
+
+          closeModal();
+
+        }
+
+      }
+    );
+
+  }
 
 
-$("#modal")
-  ?.addEventListener(
-    "click",
+  document.addEventListener(
+    "keydown",
     (event) => {
 
       if (
-        event.target ===
-        $("#modal")
+        event.key === "Escape"
       ) {
 
         closeModal();
+
       }
+
     }
   );
+
+}
 
 
 function closeModal() {
 
-  $("#modal")
-    ?.classList.add(
-      "hidden"
-    );
+  const modal =
+    $("#modal");
+
+  if (!modal) return;
+
+  modal.classList.add(
+    "hidden"
+  );
 
   document.body.classList.remove(
     "modal-open"
   );
+
 }
-
-
-/* =========================================================
-   SEARCH
-========================================================= */
-
-function search() {
-
-  renderAll();
-}
-
-
-$("#searchBtn")
-  ?.addEventListener(
-    "click",
-    () => {
-
-      search();
-
-      $("#featured")
-        ?.scrollIntoView({
-          behavior: "smooth"
-        });
-    }
-  );
-
-
-$("#searchInput")
-  ?.addEventListener(
-    "input",
-    () => {
-
-      search();
-
-      showSuggestions();
-    }
-  );
-
-
-/* =========================================================
-   LIVE SEARCH SUGGESTIONS
-========================================================= */
-
-function showSuggestions() {
-
-  const input =
-    $("#searchInput");
-
-  if (!input) return;
-
-  const searchBox =
-    input.closest(
-      ".searchbox"
-    );
-
-  if (!searchBox) return;
-
-  let box =
-    searchBox.querySelector(
-      ".search-suggestions"
-    );
-
-
-  if (!box) {
-
-    box =
-      document.createElement(
-        "div"
-      );
-
-    box.className =
-      "search-suggestions";
-
-    searchBox.appendChild(
-      box
-    );
-  }
-
-
-  const query =
-    input.value
-      .trim()
-      .toLowerCase();
-
-
-  if (!query) {
-
-    hideSuggestions();
-
-    return;
-  }
-
-
-  const suggestions =
-    nohas
-      .filter((noha) => {
-
-        const title =
-          String(
-            noha.title || ""
-          ).toLowerCase();
-
-        const keywords =
-          String(
-            noha.keywords || ""
-          ).toLowerCase();
-
-        const words =
-          `${title} ${keywords}`
-            .split(
-              /[\s,]+/
-            )
-            .filter(Boolean);
-
-        return words.some(
-          (word) =>
-            word.startsWith(
-              query
-            )
-        );
-
-      })
-      .slice(0, 7);
-
-
-  if (!suggestions.length) {
-
-    box.innerHTML = `
-      <div class="suggestion-empty">
-        No matching Nohay found
-      </div>
-    `;
-
-    box.classList.add(
-      "show"
-    );
-
-    return;
-  }
-
-
-  box.innerHTML =
-    suggestions
-      .map(
-        (noha) => `
-
-        <div
-          class="suggestion-item"
-          data-id="${esc(noha.id)}">
-
-          <div class="suggestion-icon">
-
-            <img
-              src="${esc(
-                noha.image_url ||
-                "logo.png"
-              )}"
-              alt="">
-
-          </div>
-
-          <div class="suggestion-text">
-
-            <div class="suggestion-title">
-              ${esc(noha.title)}
-            </div>
-
-            <div class="suggestion-category">
-              ${esc(
-                noha.category ||
-                "Other"
-              )}
-            </div>
-
-          </div>
-
-        </div>
-
-      `
-      )
-      .join("");
-
-
-  box
-    .querySelectorAll(
-      ".suggestion-item"
-    )
-    .forEach(
-      (item) => {
-
-        item.onclick = () => {
-
-          const id =
-            item.dataset.id;
-
-          const selected =
-            nohas.find(
-              (n) =>
-                String(n.id) ===
-                String(id)
-            );
-
-          input.value =
-            selected?.title ||
-            "";
-
-          hideSuggestions();
-
-          openNohaById(id);
-        };
-      }
-    );
-
-
-  box.classList.add(
-    "show"
-  );
-}
-
-
-function hideSuggestions() {
-
-  document
-    .querySelectorAll(
-      ".search-suggestions"
-    )
-    .forEach(
-      (box) =>
-        box.classList.remove(
-          "show"
-        )
-    );
-}
-
-
-document.addEventListener(
-  "click",
-  (event) => {
-
-    if (
-      !event.target.closest(
-        ".searchbox"
-      )
-    ) {
-
-      hideSuggestions();
-    }
-  }
-);
 
 
 /* =========================================================
    THEME
-========================================================= */
+   ========================================================= */
 
-const savedTheme =
-  localStorage.getItem(
-    "hussainiTheme"
-  );
+function setupTheme() {
 
+  const button =
+    $("#themeBtn");
 
-if (
-  savedTheme ===
-  "light"
-) {
-
-  document.body.classList.add(
-    "light"
-  );
-}
+  if (!button) return;
 
 
-$("#themeBtn")
-  ?.addEventListener(
+  button.addEventListener(
     "click",
     () => {
 
@@ -1749,126 +1407,123 @@ $("#themeBtn")
         "light"
       );
 
-      localStorage.setItem(
-        "hussainiTheme",
 
+      localStorage.setItem(
+        "hnk_theme",
         document.body.classList.contains(
           "light"
         )
           ? "light"
           : "dark"
       );
+
     }
   );
+
+
+  if (
+    localStorage.getItem(
+      "hnk_theme"
+    ) === "light"
+  ) {
+
+    document.body.classList.add(
+      "light"
+    );
+
+  }
+
+}
 
 
 /* =========================================================
    PWA INSTALL
-========================================================= */
+   ========================================================= */
 
-window.addEventListener(
-  "beforeinstallprompt",
-  (event) => {
+function setupInstall() {
 
-    event.preventDefault();
+  let deferredPrompt = null;
 
-    deferredInstallPrompt =
-      event;
+  window.addEventListener(
+    "beforeinstallprompt",
+    (event) => {
 
-    const button =
-      $("#installBtn");
+      event.preventDefault();
 
-    if (button) {
+      deferredPrompt =
+        event;
 
-      button.hidden = false;
-    }
-  }
-);
+      const installButton =
+        $("#installBtn");
 
+      if (installButton) {
 
-$("#installBtn")
-  ?.addEventListener(
-    "click",
-    async () => {
+        installButton.hidden =
+          false;
 
-      if (
-        !deferredInstallPrompt
-      ) return;
+      }
 
-      deferredInstallPrompt
-        .prompt();
-
-      await deferredInstallPrompt
-        .userChoice;
-
-      deferredInstallPrompt =
-        null;
-
-      $("#installBtn").hidden =
-        true;
     }
   );
+
+
+  const installButton =
+    $("#installBtn");
+
+
+  if (installButton) {
+
+    installButton.addEventListener(
+      "click",
+      async () => {
+
+        if (!deferredPrompt)
+          return;
+
+        deferredPrompt.prompt();
+
+        deferredPrompt =
+          null;
+
+        installButton.hidden =
+          true;
+
+      }
+    );
+
+  }
+
+}
 
 
 /* =========================================================
    SERVICE WORKER
-========================================================= */
+   ========================================================= */
 
-if (
-  "serviceWorker" in
-  navigator
-) {
+function setupServiceWorker() {
 
-  window.addEventListener(
-    "load",
-    () => {
+  if (
+    "serviceWorker" in navigator
+  ) {
 
-      navigator.serviceWorker
-        .register("sw.js")
-        .catch(
-          (error) =>
-            console.log(
+    window.addEventListener(
+      "load",
+      () => {
+
+        navigator.serviceWorker
+          .register("sw.js")
+          .catch((error) => {
+
+            console.warn(
               "Service worker:",
               error
-            )
-        );
-    }
-  );
+            );
+
+          });
+
+      }
+    );
+
+  }
+
 }
-
-
-/* =========================================================
-   EMPTY STATE HELPER
-========================================================= */
-
-function showEmpty(
-  id,
-  message
-) {
-
-  const container =
-    document.getElementById(id);
-
-  if (!container) return;
-
-  container.innerHTML = `
-    <div class="empty-favorites">
-
-      <div class="empty-heart">
-        ♡
-      </div>
-
-      <h3>
-        ${esc(message)}
-      </h3>
-
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   START APP
-========================================================= */
-
-loadNohaData();
