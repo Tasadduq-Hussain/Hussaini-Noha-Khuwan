@@ -3,8 +3,16 @@
    PUBLIC APP
    ========================================================= */
 
-const SUPABASE_URL = "https://xxigwjuzfrffgznuajui.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_DCnF_aVt833TFuGDHwtU8Q_cm17-dZn";
+const SUPABASE_URL =
+  "https://xxigwjuzfrffgznuajui.supabase.co";
+
+const SUPABASE_ANON_KEY =
+  "sb_publishable_DCnF_aVt833TFuGDHwtU8Q_cm17-dZn";
+
+
+/* =========================================================
+   GLOBAL DATA
+   ========================================================= */
 
 let supabaseClient = null;
 let nohay = [];
@@ -15,7 +23,8 @@ const demoNohay = [
     title: "اب مجھے کوئی سکینہ نہیں کہتا بابا",
     reciter: "Hussaini Noha Khuwan",
     category: "Muharram",
-    keywords: "ab mujhe koi sakina nahi kehta baba sakina ali akbar",
+    keywords:
+      "ab mujhe koi sakina nahi kehta baba sakina",
     image: "",
     lyrics: ""
   },
@@ -24,7 +33,8 @@ const demoNohay = [
     title: "علی اکبر علی اکبر",
     reciter: "Hussaini Noha Khuwan",
     category: "Muharram",
-    keywords: "ali akbar aliakbar akber",
+    keywords:
+      "ali akbar aliakbar akber",
     image: "",
     lyrics: ""
   },
@@ -33,13 +43,15 @@ const demoNohay = [
     title: "واہ میرے لال",
     reciter: "Hussaini Noha Khuwan",
     category: "Muharram",
-    keywords: "wah mere lal",
+    keywords:
+      "wah mere lal",
     image: "",
     lyrics: ""
   }
 ];
 
-const cats = [
+
+const categories = [
   "All",
   "Muharram",
   "Ayyam-e-Ali",
@@ -47,16 +59,28 @@ const cats = [
   "Other"
 ];
 
-const $ = (selector) => document.querySelector(selector);
+
+const $ = (selector) =>
+  document.querySelector(selector);
+
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
 
 function escapeHtml(value = "") {
-  return String(value).replace(/[&<>"']/g, (char) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  }[char]));
+
+  return String(value).replace(
+    /[&<>"']/g,
+    (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[char])
+  );
+
 }
 
 
@@ -64,65 +88,13 @@ function escapeHtml(value = "") {
    INITIALIZE
    ========================================================= */
 
-document.addEventListener("DOMContentLoaded", () => {
-
-  initializeApp();
-
-});
+document.addEventListener(
+  "DOMContentLoaded",
+  initializeApp
+);
 
 
 async function initializeApp() {
-
-  /* Load Supabase library */
-  try {
-
-    const script = document.createElement("script");
-
-    script.src =
-      "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-
-    script.onload = async () => {
-
-      try {
-
-        supabaseClient =
-          window.supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_ANON_KEY
-          );
-
-        await loadNohay();
-
-      } catch (error) {
-
-        console.warn("Supabase initialization failed:", error);
-
-        loadLocalData();
-
-      }
-
-    };
-
-    script.onerror = () => {
-
-      console.warn("Supabase library could not load.");
-
-      loadLocalData();
-
-    };
-
-    document.head.appendChild(script);
-
-  } catch (error) {
-
-    console.warn(error);
-
-    loadLocalData();
-
-  }
-
-
-  setupSearch();
 
   setupTheme();
 
@@ -132,18 +104,92 @@ async function initializeApp() {
 
   setupServiceWorker();
 
+  setupSearch();
+
+  renderLocalImmediately();
+
+  await initializeSupabase();
+
 }
 
 
 /* =========================================================
-   LOAD DATA
+   SUPABASE
+   ========================================================= */
+
+async function initializeSupabase() {
+
+  try {
+
+    if (!window.supabase) {
+
+      await loadSupabaseScript();
+
+    }
+
+    supabaseClient =
+      window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+    await loadNohay();
+
+  } catch (error) {
+
+    console.warn(
+      "Supabase unavailable:",
+      error
+    );
+
+    loadLocalData();
+
+  }
+
+}
+
+
+function loadSupabaseScript() {
+
+  return new Promise(
+    (resolve, reject) => {
+
+      const script =
+        document.createElement(
+          "script"
+        );
+
+      script.src =
+        "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+
+      script.onload = resolve;
+
+      script.onerror = reject;
+
+      document.head.appendChild(
+        script
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   DATA LOADING
    ========================================================= */
 
 async function loadNohay() {
 
-  loadLocalData();
+  if (!supabaseClient) {
 
-  if (!supabaseClient) return;
+    loadLocalData();
+
+    return;
+
+  }
+
 
   try {
 
@@ -153,27 +199,43 @@ async function loadNohay() {
     } = await supabaseClient
       .from("nohas")
       .select("*")
-      .order("created_at", {
-        ascending: false
-      });
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      );
 
-    if (error) throw error;
 
-    nohay = data || [];
+    if (error) {
+
+      throw error;
+
+    }
+
+
+    nohay =
+      Array.isArray(data)
+        ? data
+        : [];
+
 
     localStorage.setItem(
       "hnk_nohay",
       JSON.stringify(nohay)
     );
 
+
     renderAll();
 
   } catch (error) {
 
     console.warn(
-      "Offline/cache mode:",
+      "Using offline cache:",
       error.message
     );
+
+    loadLocalData();
 
   }
 
@@ -186,8 +248,11 @@ function loadLocalData() {
 
     const cached =
       JSON.parse(
-        localStorage.getItem("hnk_nohay") || "null"
+        localStorage.getItem(
+          "hnk_nohay"
+        ) || "null"
       );
+
 
     if (
       Array.isArray(cached) &&
@@ -208,81 +273,129 @@ function loadLocalData() {
 
   }
 
+
   renderAll();
 
 }
 
 
-/* =========================================================
-   FILTERS
-   ========================================================= */
+function renderLocalImmediately() {
 
-function renderFilters() {
-
-  const filters = $("#filters");
-
-  if (!filters) return;
-
-  filters.innerHTML = cats
-    .map((category, index) => {
-
-      return `
-        <button
-          class="filter ${index === 0 ? "active" : ""}"
-          data-cat="${escapeHtml(category)}"
-          type="button"
-        >
-          ${escapeHtml(category)}
-        </button>
-      `;
-
-    })
-    .join("");
-
-
-  document
-    .querySelectorAll(".filter")
-    .forEach((button) => {
-
-      button.addEventListener("click", () => {
-
-        document
-          .querySelectorAll(".filter")
-          .forEach((item) => {
-
-            item.classList.remove("active");
-
-          });
-
-        button.classList.add("active");
-
-        const query =
-          $("#searchInput")?.value.trim() || "";
-
-        if (query) {
-
-          renderSearchResults(
-            button.dataset.cat,
-            query
-          );
-
-        } else {
-
-          renderFeatured(button.dataset.cat);
-
-          renderRecent(button.dataset.cat);
-
-        }
-
-      });
-
-    });
+  loadLocalData();
 
 }
 
 
 /* =========================================================
-   FIND / FILTER NOHAY
+   CATEGORY FILTERS
+   ========================================================= */
+
+function renderFilters() {
+
+  const filters =
+    $("#filters");
+
+  if (!filters) return;
+
+
+  filters.innerHTML =
+    categories
+      .map(
+        (category, index) => {
+
+          return `
+            <button
+              class="filter ${
+                index === 0
+                  ? "active"
+                  : ""
+              }"
+              data-cat="${escapeHtml(
+                category
+              )}"
+              type="button"
+            >
+              ${escapeHtml(
+                category
+              )}
+            </button>
+          `;
+
+        }
+      )
+      .join("");
+
+
+  filters
+    .querySelectorAll(
+      ".filter"
+    )
+    .forEach(
+      (button) => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            filters
+              .querySelectorAll(
+                ".filter"
+              )
+              .forEach(
+                (item) =>
+                  item.classList.remove(
+                    "active"
+                  )
+              );
+
+
+            button.classList.add(
+              "active"
+            );
+
+
+            const category =
+              button.dataset.cat;
+
+
+            const query =
+              $("#searchInput")
+                ?.value
+                .trim() || "";
+
+
+            if (query) {
+
+              showSearchResults(
+                query,
+                category
+              );
+
+            } else {
+
+              renderFeatured(
+                category
+              );
+
+              renderRecent(
+                category
+              );
+
+              hideDirectSearchResults();
+
+            }
+
+          }
+        );
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   FILTER DATA
    ========================================================= */
 
 function getFilteredNohay(
@@ -291,47 +404,73 @@ function getFilteredNohay(
 ) {
 
   const term =
-    query.trim().toLowerCase();
-
-  return nohay.filter((noha) => {
-
-    const categoryMatch =
-      category === "All" ||
-      noha.category === category;
-
-    if (!categoryMatch) return false;
-
-    if (!term) return true;
-
-    const searchableText = [
-
-      noha.title || "",
-      noha.reciter || "",
-      noha.keywords || "",
-      noha.category || ""
-
-    ]
-      .join(" ")
+    String(query)
+      .trim()
       .toLowerCase();
 
-    return searchableText.includes(term);
 
-  });
+  return nohay.filter(
+    (noha) => {
+
+      const categoryMatch =
+        category === "All" ||
+        noha.category === category;
+
+
+      if (!categoryMatch) {
+
+        return false;
+
+      }
+
+
+      if (!term) {
+
+        return true;
+
+      }
+
+
+      const searchable = [
+
+        noha.title || "",
+
+        noha.reciter || "",
+
+        noha.keywords || "",
+
+        noha.category || ""
+
+      ]
+        .join(" ")
+        .toLowerCase();
+
+
+      return searchable.includes(
+        term
+      );
+
+    }
+  );
 
 }
 
 
 /* =========================================================
-   RECOMMENDATION / FEATURED CARD
-   NO IMAGE HERE
+   FEATURED / RECOMMENDATIONS
+   TEXT ONLY
    ========================================================= */
 
-function recommendationCard(noha) {
+function createRecommendationCard(
+  noha
+) {
 
   return `
     <article
       class="card recommendation-card"
-      onclick="openNoha('${escapeHtml(noha.id)}')"
+      data-noha-id="${escapeHtml(
+        noha.id
+      )}"
     >
 
       <div class="recommendation-icon">
@@ -341,7 +480,9 @@ function recommendationCard(noha) {
       <div class="card-body">
 
         <div class="card-title">
-          ${escapeHtml(noha.title)}
+          ${escapeHtml(
+            noha.title
+          )}
         </div>
 
         <div class="meta">
@@ -353,7 +494,8 @@ function recommendationCard(noha) {
 
         <span class="tag">
           ${escapeHtml(
-            noha.category || "Other"
+            noha.category ||
+            "Other"
           )}
         </span>
 
@@ -365,10 +507,6 @@ function recommendationCard(noha) {
 }
 
 
-/* =========================================================
-   FEATURED NOHAY
-   ========================================================= */
-
 function renderFeatured(
   category = "All"
 ) {
@@ -378,218 +516,31 @@ function renderFeatured(
 
   if (!grid) return;
 
+
   const list =
-    getFilteredNohay(category, "");
+    getFilteredNohay(
+      category,
+      ""
+    );
+
 
   const featured =
     list.slice(0, 4);
+
 
   if (!featured.length) {
 
     grid.innerHTML = `
       <div class="empty-favorites">
-        <h3>No Recommendations Yet</h3>
-        <p>
-          Nohay add hone ke baad yahan recommendations nazar aayengi.
-        </p>
-      </div>
-    `;
-
-    return;
-
-  }
-
-  grid.innerHTML =
-    featured
-      .map(recommendationCard)
-      .join("");
-
-}
-
-
-/* =========================================================
-   SEARCH RESULTS SECTION
-   ========================================================= */
-
-function ensureSearchResultsSection() {
-
-  let section =
-    $("#searchResultsSection");
-
-  if (section) return section;
-
-  const featured =
-    $("#featured");
-
-  if (!featured) return null;
-
-  section =
-    document.createElement("section");
-
-  section.id =
-    "searchResultsSection";
-
-  section.className =
-    "section search-results-section";
-
-  section.innerHTML = `
-    <div class="section-title">
-
-      <h2 id="searchResultsTitle">
-        Search Results
-      </h2>
-
-      <button
-        id="clearSearchResults"
-        class="secondary-action"
-        type="button"
-      >
-        Clear
-      </button>
-
-    </div>
-
-    <div
-      id="searchResultsGrid"
-      class="cards search-results-grid"
-    ></div>
-  `;
-
-  featured.insertAdjacentElement(
-    "afterend",
-    section
-  );
-
-
-  $("#clearSearchResults")
-    ?.addEventListener("click", () => {
-
-      if ($("#searchInput")) {
-
-        $("#searchInput").value = "";
-
-      }
-
-      section.classList.add("hidden");
-
-      const activeCategory =
-        document
-          .querySelector(".filter.active")
-          ?.dataset.cat || "All";
-
-      renderFeatured(activeCategory);
-
-      renderRecent(activeCategory);
-
-    });
-
-
-  return section;
-
-}
-
-
-/* =========================================================
-   SEARCH RESULT CARD
-   NO FULL IMAGE
-   ========================================================= */
-
-function searchResultCard(noha) {
-
-  return `
-    <article
-      class="card search-result-card"
-      onclick="openNoha('${escapeHtml(noha.id)}')"
-    >
-
-      <div class="search-result-content">
-
-        <div class="search-result-icon">
-          🔎
-        </div>
-
-        <div class="search-result-info">
-
-          <div class="card-title">
-            ${escapeHtml(noha.title)}
-          </div>
-
-          <div class="meta">
-            ${escapeHtml(
-              noha.reciter ||
-              "Hussaini Noha Khuwan"
-            )}
-          </div>
-
-          <span class="tag">
-            ${escapeHtml(
-              noha.category || "Other"
-            )}
-          </span>
-
-        </div>
-
-        <div class="search-result-arrow">
-          →
-        </div>
-
-      </div>
-
-    </article>
-  `;
-
-}
-
-
-/* =========================================================
-   RENDER SEARCH RESULTS
-   ========================================================= */
-
-function renderSearchResults(
-  category = "All",
-  query = ""
-) {
-
-  const section =
-    ensureSearchResultsSection();
-
-  if (!section) return;
-
-  const grid =
-    $("#searchResultsGrid");
-
-  const title =
-    $("#searchResultsTitle");
-
-  if (!grid || !title) return;
-
-  const list =
-    getFilteredNohay(
-      category,
-      query
-    );
-
-  title.textContent =
-    `Search Results (${list.length})`;
-
-  section.classList.remove("hidden");
-
-
-  if (!list.length) {
-
-    grid.innerHTML = `
-      <div class="empty-favorites">
-
-        <div class="empty-heart">
-          🔍
-        </div>
 
         <h3>
-          No Noha Found
+          No Recommendations Yet
         </h3>
 
         <p>
-          "${escapeHtml(query)}" ke liye koi Noha nahi mila.
+          Nohay add hone ke baad
+          yahan recommendations nazar
+          aayengi.
         </p>
 
       </div>
@@ -601,9 +552,16 @@ function renderSearchResults(
 
 
   grid.innerHTML =
-    list
-      .map(searchResultCard)
+    featured
+      .map(
+        createRecommendationCard
+      )
       .join("");
+
+
+  attachNohaClicks(
+    grid
+  );
 
 }
 
@@ -621,6 +579,7 @@ function renderRecent(
     $("#recentList");
 
   if (!recentList) return;
+
 
   const list =
     getFilteredNohay(
@@ -644,209 +603,353 @@ function renderRecent(
 
   recentList.innerHTML =
     list
-      .map((noha) => {
+      .map(
+        (noha) => {
 
-        return `
-          <div
-            class="recent-item text-only-recent"
-            onclick="openNoha('${escapeHtml(noha.id)}')"
-          >
+          return `
+            <div
+              class="recent-item text-only-recent"
+              data-noha-id="${escapeHtml(
+                noha.id
+              )}"
+            >
 
-            <div class="recent-text-icon">
-              ♪
-            </div>
-
-            <div class="recent-info">
-
-              <b>
-                ${escapeHtml(noha.title)}
-              </b>
-
-              <div class="meta">
-                ${escapeHtml(
-                  noha.reciter ||
-                  "Hussaini Noha Khuwan"
-                )}
+              <div class="recent-text-icon">
+                ♪
               </div>
 
-              <span class="tag">
-                ${escapeHtml(
-                  noha.category || "Other"
-                )}
+              <div class="recent-info">
+
+                <b>
+                  ${escapeHtml(
+                    noha.title
+                  )}
+                </b>
+
+                <div class="meta">
+                  ${escapeHtml(
+                    noha.reciter ||
+                    "Hussaini Noha Khuwan"
+                  )}
+                </div>
+
+                <span class="tag">
+                  ${escapeHtml(
+                    noha.category ||
+                    "Other"
+                  )}
+                </span>
+
+              </div>
+
+              <span class="recent-arrow">
+                →
               </span>
 
             </div>
+          `;
 
-            <span class="recent-arrow">
-              →
-            </span>
-
-          </div>
-        `;
-
-      })
+        }
+      )
       .join("");
+
+
+  attachNohaClicks(
+    recentList
+  );
 
 }
 
 
 /* =========================================================
-   CATEGORIES
+   NOHA CLICK HANDLERS
    ========================================================= */
 
-function renderCategories() {
+function attachNohaClicks(
+  container
+) {
 
-  const categoryList =
-    $("#categoryList");
+  container
+    .querySelectorAll(
+      "[data-noha-id]"
+    )
+    .forEach(
+      (element) => {
 
-  if (!categoryList) return;
+        element.addEventListener(
+          "click",
+          () => {
 
-  const counts = {};
+            openNoha(
+              element.dataset.nohaId
+            );
 
-  nohay.forEach((noha) => {
+          }
+        );
 
-    const category =
-      noha.category || "Other";
-
-    counts[category] =
-      (counts[category] || 0) + 1;
-
-  });
-
-
-  categoryList.innerHTML =
-    cats
-      .slice(1)
-      .map((category) => {
-
-        return `
-          <div
-            class="cat"
-            onclick="selectCategory('${escapeHtml(category)}')"
-          >
-
-            <span>
-              ${escapeHtml(category)}
-            </span>
-
-            <span class="count">
-              ${counts[category] || 0}
-            </span>
-
-          </div>
-        `;
-
-      })
-      .join("");
-
-}
-
-
-/* =========================================================
-   CATEGORY CLICK
-   ========================================================= */
-
-window.selectCategory =
-function(category) {
-
-  const button =
-    document.querySelector(
-      `.filter[data-cat="${CSS.escape(category)}"]`
+      }
     );
 
-  if (button) {
-
-    button.click();
-
-  }
-
-  const categories =
-    $("#categories");
-
-  if (categories) {
-
-    categories.scrollIntoView({
-      behavior: "smooth"
-    });
-
-  }
-
-};
-
-
-/* =========================================================
-   RENDER EVERYTHING
-   ========================================================= */
-
-function renderAll() {
-
-  renderFilters();
-
-  renderFeatured();
-
-  renderRecent();
-
-  renderCategories();
-
 }
 
 
 /* =========================================================
-   SEARCH
+   SEARCH RESULTS
+   DIRECTLY BELOW SEARCH BAR
    ========================================================= */
 
-function performSearch() {
+function createDirectSearchResultsBox() {
 
-  const query =
-    $("#searchInput")?.value.trim() || "";
-
-  const activeCategory =
-    document
-      .querySelector(".filter.active")
-      ?.dataset.cat || "All";
+  let box =
+    $("#directSearchResults");
 
 
-  if (!query) {
+  if (box) {
 
-    const section =
-      $("#searchResultsSection");
+    return box;
 
-    if (section) {
+  }
 
-      section.classList.add("hidden");
 
-    }
+  const searchBox =
+    document.querySelector(
+      ".searchbox"
+    );
 
-    renderFeatured(activeCategory);
 
-    renderRecent(activeCategory);
+  if (!searchBox) {
+
+    return null;
+
+  }
+
+
+  box =
+    document.createElement(
+      "div"
+    );
+
+
+  box.id =
+    "directSearchResults";
+
+
+  box.className =
+    "search-results-box hidden";
+
+
+  searchBox.insertAdjacentElement(
+    "afterend",
+    box
+  );
+
+
+  return box;
+
+}
+
+
+function createSearchResultCard(
+  noha
+) {
+
+  return `
+    <div
+      class="search-result-item"
+      data-noha-id="${escapeHtml(
+        noha.id
+      )}"
+    >
+
+      <div class="search-result-icon">
+        ♪
+      </div>
+
+      <div class="search-result-info">
+
+        <div class="search-result-title">
+          ${escapeHtml(
+            noha.title
+          )}
+        </div>
+
+        <div class="search-result-meta">
+          ${escapeHtml(
+            noha.reciter ||
+            "Hussaini Noha Khuwan"
+          )}
+        </div>
+
+        <span class="search-result-category">
+          ${escapeHtml(
+            noha.category ||
+            "Other"
+          )}
+        </span>
+
+      </div>
+
+      <div class="search-result-arrow">
+        →
+      </div>
+
+    </div>
+  `;
+
+}
+
+
+function showSearchResults(
+  query,
+  category = "All"
+) {
+
+  const box =
+    createDirectSearchResultsBox();
+
+
+  if (!box) return;
+
+
+  const cleanQuery =
+    String(query)
+      .trim()
+      .toLowerCase();
+
+
+  if (!cleanQuery) {
+
+    hideDirectSearchResults();
 
     return;
 
   }
 
 
-  renderSearchResults(
-    activeCategory,
-    query
+  const results =
+    getFilteredNohay(
+      category,
+      cleanQuery
+    );
+
+
+  box.classList.remove(
+    "hidden"
   );
 
 
-  const results =
-    $("#searchResultsSection");
+  if (!results.length) {
 
-  if (results) {
+    box.innerHTML = `
+      <div class="search-results-empty">
 
-    setTimeout(() => {
+        Noha nahi mila for
 
-      results.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
+        <strong>
+          "${escapeHtml(
+            query
+          )}"
+        </strong>
 
-    }, 80);
+      </div>
+    `;
+
+    return;
 
   }
+
+
+  box.innerHTML = `
+
+    <div class="search-results-heading">
+      Search Results
+      <span>
+        ${results.length}
+      </span>
+    </div>
+
+    ${results
+      .slice(0, 8)
+      .map(
+        createSearchResultCard
+      )
+      .join("")}
+
+  `;
+
+
+  attachNohaClicks(
+    box
+  );
+
+}
+
+
+function hideDirectSearchResults() {
+
+  const box =
+    $("#directSearchResults");
+
+
+  if (!box) return;
+
+
+  box.classList.add(
+    "hidden"
+  );
+
+
+  box.innerHTML = "";
+
+}
+
+
+/* =========================================================
+   SEARCH BUTTON
+   ========================================================= */
+
+function performSearch() {
+
+  const input =
+    $("#searchInput");
+
+  if (!input) return;
+
+
+  const query =
+    input.value.trim();
+
+
+  const activeCategory =
+    document
+      .querySelector(
+        ".filter.active"
+      )
+      ?.dataset.cat ||
+    "All";
+
+
+  if (!query) {
+
+    hideDirectSearchResults();
+
+    renderFeatured(
+      activeCategory
+    );
+
+    renderRecent(
+      activeCategory
+    );
+
+    return;
+
+  }
+
+
+  showSearchResults(
+    query,
+    activeCategory
+  );
 
 }
 
@@ -858,6 +961,7 @@ function setupSearch() {
 
   const button =
     $("#searchBtn");
+
 
   if (button) {
 
@@ -875,11 +979,29 @@ function setupSearch() {
       "keydown",
       (event) => {
 
-        if (event.key === "Enter") {
+        if (
+          event.key === "Enter"
+        ) {
 
           event.preventDefault();
 
           performSearch();
+
+        }
+
+      }
+    );
+
+
+    input.addEventListener(
+      "input",
+      () => {
+
+        if (
+          !input.value.trim()
+        ) {
+
+          hideDirectSearchResults();
 
         }
 
@@ -902,8 +1024,10 @@ function(id) {
   const noha =
     nohay.find(
       (item) =>
-        String(item.id) === String(id)
+        String(item.id) ===
+        String(id)
     );
+
 
   if (!noha) return;
 
@@ -914,7 +1038,12 @@ function(id) {
   const content =
     $("#modalContent");
 
-  if (!modal || !content) return;
+
+  if (!modal || !content) {
+
+    return;
+
+  }
 
 
   content.innerHTML = `
@@ -927,12 +1056,15 @@ function(id) {
 
           <span class="detail-category">
             ${escapeHtml(
-              noha.category || "Other"
+              noha.category ||
+              "Other"
             )}
           </span>
 
           <h2>
-            ${escapeHtml(noha.title)}
+            ${escapeHtml(
+              noha.title
+            )}
           </h2>
 
         </div>
@@ -946,9 +1078,13 @@ function(id) {
             <div class="lyrics-viewer">
 
               <img
-                src="${escapeHtml(noha.image)}"
+                src="${escapeHtml(
+                  noha.image
+                )}"
                 alt="Lyrics"
-                onclick="openFullscreenImage('${escapeHtml(noha.id)}')"
+                onclick="openFullscreenImage('${escapeHtml(
+                  noha.id
+                )}')"
               >
 
             </div>
@@ -976,7 +1112,10 @@ function(id) {
             ? `
               <button
                 class="secondary-action"
-                onclick="copyLyrics('${escapeHtml(noha.id)}')"
+                type="button"
+                onclick="copyLyrics('${escapeHtml(
+                  noha.id
+                )}')"
               >
                 📋 Copy Lyrics
               </button>
@@ -984,12 +1123,16 @@ function(id) {
             : ""
         }
 
+
         ${
           noha.image
             ? `
               <button
                 class="secondary-action"
-                onclick="downloadLyricsImage('${escapeHtml(noha.id)}')"
+                type="button"
+                onclick="downloadLyricsImage('${escapeHtml(
+                  noha.id
+                )}')"
               >
                 ⬇ Download Image
               </button>
@@ -997,9 +1140,13 @@ function(id) {
             : ""
         }
 
+
         <button
           class="secondary-action"
-          onclick="shareNoha('${escapeHtml(noha.id)}')"
+          type="button"
+          onclick="shareNoha('${escapeHtml(
+            noha.id
+          )}')"
         >
           ↗ Share
         </button>
@@ -1017,7 +1164,9 @@ function(id) {
               </div>
 
               <div class="typed-lyrics-text">
-                ${escapeHtml(noha.lyrics)}
+                ${escapeHtml(
+                  noha.lyrics
+                )}
               </div>
 
             </div>
@@ -1030,7 +1179,10 @@ function(id) {
   `;
 
 
-  modal.classList.remove("hidden");
+  modal.classList.remove(
+    "hidden"
+  );
+
 
   document.body.classList.add(
     "modal-open"
@@ -1049,25 +1201,40 @@ function(id) {
   const noha =
     nohay.find(
       (item) =>
-        String(item.id) === String(id)
+        String(item.id) ===
+        String(id)
     );
 
-  if (!noha || !noha.image) return;
+
+  if (
+    !noha ||
+    !noha.image
+  ) {
+
+    return;
+
+  }
 
 
   let viewer =
-    document.getElementById(
-      "simpleImageViewer"
-    );
+    $("#simpleImageViewer");
 
 
   if (!viewer) {
 
     viewer =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
+
 
     viewer.id =
       "simpleImageViewer";
+
+
+    viewer.className =
+      "image-viewer hidden";
+
 
     viewer.innerHTML = `
 
@@ -1090,14 +1257,14 @@ function(id) {
 
     `;
 
-    viewer.className =
-      "image-viewer";
 
-    document.body.appendChild(viewer);
+    document.body.appendChild(
+      viewer
+    );
 
 
     $("#simpleImageClose")
-      .addEventListener(
+      ?.addEventListener(
         "click",
         () => {
 
@@ -1135,8 +1302,14 @@ function(id) {
   const image =
     $("#simpleFullImage");
 
-  image.src =
-    noha.image;
+
+  if (image) {
+
+    image.src =
+      noha.image;
+
+  }
+
 
   viewer.classList.remove(
     "hidden"
@@ -1146,7 +1319,7 @@ function(id) {
 
 
 /* =========================================================
-   DOWNLOAD IMAGE
+   DOWNLOAD
    ========================================================= */
 
 window.downloadLyricsImage =
@@ -1155,44 +1328,76 @@ async function(id) {
   const noha =
     nohay.find(
       (item) =>
-        String(item.id) === String(id)
+        String(item.id) ===
+        String(id)
     );
 
-  if (!noha || !noha.image) return;
+
+  if (
+    !noha ||
+    !noha.image
+  ) {
+
+    return;
+
+  }
 
 
   try {
 
     const response =
-      await fetch(noha.image);
+      await fetch(
+        noha.image
+      );
+
 
     const blob =
       await response.blob();
 
+
     const url =
-      URL.createObjectURL(blob);
+      URL.createObjectURL(
+        blob
+      );
+
 
     const link =
-      document.createElement("a");
+      document.createElement(
+        "a"
+      );
 
-    link.href = url;
+
+    link.href =
+      url;
+
 
     link.download =
-      `${(noha.title || "noha")
-        .replace(/[\\/:*?"<>|]/g, "_")
-      }.jpg`;
+      `${(
+        noha.title ||
+        "noha"
+      ).replace(
+        /[\\/:*?"<>|]/g,
+        "_"
+      )}.jpg`;
 
-    document.body.appendChild(link);
+
+    document.body.appendChild(
+      link
+    );
+
 
     link.click();
 
+
     link.remove();
 
-    URL.revokeObjectURL(url);
+
+    URL.revokeObjectURL(
+      url
+    );
 
   } catch (error) {
 
-    /* Fallback */
     window.open(
       noha.image,
       "_blank"
@@ -1213,8 +1418,10 @@ async function(id) {
   const noha =
     nohay.find(
       (item) =>
-        String(item.id) === String(id)
+        String(item.id) ===
+        String(id)
     );
+
 
   if (!noha) return;
 
@@ -1227,11 +1434,16 @@ async function(id) {
 
   try {
 
-    await navigator.clipboard.writeText(
-      text
-    );
+    await navigator
+      .clipboard
+      .writeText(
+        text
+      );
 
-    alert("Lyrics copied!");
+
+    alert(
+      "Lyrics copied!"
+    );
 
   } catch (error) {
 
@@ -1254,15 +1466,18 @@ async function(id) {
   const noha =
     nohay.find(
       (item) =>
-        String(item.id) === String(id)
+        String(item.id) ===
+        String(id)
     );
+
 
   if (!noha) return;
 
 
   const shareData = {
 
-    title: noha.title,
+    title:
+      noha.title,
 
     text:
       noha.lyrics ||
@@ -1286,9 +1501,12 @@ async function(id) {
 
     } else {
 
-      await navigator.clipboard.writeText(
-        window.location.href
-      );
+      await navigator
+        .clipboard
+        .writeText(
+          window.location.href
+        );
+
 
       alert(
         "Link copied!"
@@ -1338,7 +1556,8 @@ function setupModal() {
       (event) => {
 
         if (
-          event.target === modal
+          event.target ===
+          modal
         ) {
 
           closeModal();
@@ -1356,7 +1575,8 @@ function setupModal() {
     (event) => {
 
       if (
-        event.key === "Escape"
+        event.key ===
+        "Escape"
       ) {
 
         closeModal();
@@ -1374,15 +1594,145 @@ function closeModal() {
   const modal =
     $("#modal");
 
+
   if (!modal) return;
+
 
   modal.classList.add(
     "hidden"
   );
 
+
   document.body.classList.remove(
     "modal-open"
   );
+
+}
+
+
+/* =========================================================
+   CATEGORIES
+   ========================================================= */
+
+function renderCategories() {
+
+  const categoryList =
+    $("#categoryList");
+
+
+  if (!categoryList) return;
+
+
+  const counts = {};
+
+
+  nohay.forEach(
+    (noha) => {
+
+      const category =
+        noha.category ||
+        "Other";
+
+
+      counts[category] =
+        (counts[category] || 0) +
+        1;
+
+    }
+  );
+
+
+  categoryList.innerHTML =
+    categories
+      .slice(1)
+      .map(
+        (category) => {
+
+          return `
+            <div
+              class="cat"
+              data-category="${escapeHtml(
+                category
+              )}"
+            >
+
+              <span>
+                ${escapeHtml(
+                  category
+                )}
+              </span>
+
+              <span class="count">
+                ${counts[
+                  category
+                ] || 0}
+              </span>
+
+            </div>
+          `;
+
+        }
+      )
+      .join("");
+
+
+  categoryList
+    .querySelectorAll(
+      "[data-category]"
+    )
+    .forEach(
+      (item) => {
+
+        item.addEventListener(
+          "click",
+          () => {
+
+            selectCategory(
+              item.dataset.category
+            );
+
+          }
+        );
+
+      }
+    );
+
+}
+
+
+window.selectCategory =
+function(category) {
+
+  const button =
+    document.querySelector(
+      `.filter[data-cat="${CSS.escape(
+        category
+      )}"]`
+    );
+
+
+  if (button) {
+
+    button.click();
+
+  }
+
+};
+
+
+/* =========================================================
+   RENDER EVERYTHING
+   ========================================================= */
+
+function renderAll() {
+
+  renderFilters();
+
+  renderFeatured();
+
+  renderRecent();
+
+  renderCategories();
 
 }
 
@@ -1395,6 +1745,7 @@ function setupTheme() {
 
   const button =
     $("#themeBtn");
+
 
   if (!button) return;
 
@@ -1442,7 +1793,9 @@ function setupTheme() {
 
 function setupInstall() {
 
-  let deferredPrompt = null;
+  let deferredPrompt =
+    null;
+
 
   window.addEventListener(
     "beforeinstallprompt",
@@ -1453,12 +1806,14 @@ function setupInstall() {
       deferredPrompt =
         event;
 
-      const installButton =
+
+      const button =
         $("#installBtn");
 
-      if (installButton) {
 
-        installButton.hidden =
+      if (button) {
+
+        button.hidden =
           false;
 
       }
@@ -1467,31 +1822,36 @@ function setupInstall() {
   );
 
 
-  const installButton =
+  const button =
     $("#installBtn");
 
 
-  if (installButton) {
+  if (!button) return;
 
-    installButton.addEventListener(
-      "click",
-      async () => {
 
-        if (!deferredPrompt)
-          return;
+  button.addEventListener(
+    "click",
+    async () => {
 
-        deferredPrompt.prompt();
+      if (!deferredPrompt) {
 
-        deferredPrompt =
-          null;
-
-        installButton.hidden =
-          true;
+        return;
 
       }
-    );
 
-  }
+
+      deferredPrompt.prompt();
+
+
+      deferredPrompt =
+        null;
+
+
+      button.hidden =
+        true;
+
+    }
+  );
 
 }
 
@@ -1503,282 +1863,34 @@ function setupInstall() {
 function setupServiceWorker() {
 
   if (
-    "serviceWorker" in navigator
+    !("serviceWorker" in navigator)
   ) {
 
-    window.addEventListener(
-      "load",
-      () => {
+    return;
 
-        navigator.serviceWorker
-          .register("sw.js")
-          .catch((error) => {
+  }
+
+
+  window.addEventListener(
+    "load",
+    () => {
+
+      navigator.serviceWorker
+        .register(
+          "sw.js"
+        )
+        .catch(
+          (error) => {
 
             console.warn(
               "Service worker:",
               error
             );
 
-          });
-
-      }
-    );
-
-  }
-
-}
-/* =========================================================
-   SEARCH RESULTS BELOW SEARCH BAR
-   ========================================================= */
-
-(function setupDirectSearchResults() {
-
-  function initSearchResults() {
-
-    const searchInput =
-      document.getElementById("searchInput");
-
-    const searchButton =
-      document.getElementById("searchBtn");
-
-    const searchBox =
-      document.querySelector(".searchbox");
-
-    if (!searchInput || !searchButton || !searchBox) {
-      return;
-    }
-
-
-    /* Remove old button listeners */
-    const cleanButton =
-      searchButton.cloneNode(true);
-
-    searchButton.replaceWith(cleanButton);
-
-
-    /* Create result container */
-    let resultsBox =
-      document.getElementById(
-        "directSearchResults"
-      );
-
-
-    if (!resultsBox) {
-
-      resultsBox =
-        document.createElement("div");
-
-      resultsBox.id =
-        "directSearchResults";
-
-      resultsBox.className =
-        "search-results-box hidden";
-
-      searchBox.insertAdjacentElement(
-        "afterend",
-        resultsBox
-      );
-
-    }
-
-
-    function runSearch() {
-
-      const query =
-        searchInput.value
-          .trim()
-          .toLowerCase();
-
-
-      if (!query) {
-
-        resultsBox.classList.add(
-          "hidden"
+          }
         );
 
-        resultsBox.innerHTML = "";
-
-        return;
-
-      }
-
-
-      const results =
-        (typeof nohay !== "undefined"
-          ? nohay
-          : []
-        ).filter((noha) => {
-
-          const searchable = [
-
-            noha.title || "",
-
-            noha.reciter || "",
-
-            noha.keywords || "",
-
-            noha.category || ""
-
-          ]
-            .join(" ")
-            .toLowerCase();
-
-
-          return searchable.includes(
-            query
-          );
-
-        });
-
-
-      resultsBox.classList.remove(
-        "hidden"
-      );
-
-
-      if (!results.length) {
-
-        resultsBox.innerHTML = `
-
-          <div class="search-results-empty">
-
-            Noha nahi mila for
-            <strong>
-              "${escapeHtml(query)}"
-            </strong>
-
-          </div>
-
-        `;
-
-        return;
-
-      }
-
-
-      resultsBox.innerHTML =
-
-        results
-          .slice(0, 8)
-          .map((noha) => {
-
-            return `
-
-              <div
-                class="search-result-item"
-                data-id="${escapeHtml(noha.id)}"
-              >
-
-                <div class="search-result-icon">
-                  ♪
-                </div>
-
-                <div class="search-result-info">
-
-                  <div class="search-result-title">
-                    ${escapeHtml(
-                      noha.title
-                    )}
-                  </div>
-
-                  <div class="search-result-meta">
-                    ${escapeHtml(
-                      noha.reciter ||
-                      "Hussaini Noha Khuwan"
-                    )}
-                  </div>
-
-                  <span class="search-result-category">
-                    ${escapeHtml(
-                      noha.category ||
-                      "Other"
-                    )}
-                  </span>
-
-                </div>
-
-                <div class="search-result-arrow">
-                  →
-                </div>
-
-              </div>
-
-            `;
-
-          })
-          .join("");
-
-
-      /* Click result → open full Noha */
-      resultsBox
-        .querySelectorAll(
-          ".search-result-item"
-        )
-        .forEach((item) => {
-
-          item.addEventListener(
-            "click",
-            () => {
-
-              if (
-                typeof openNoha ===
-                "function"
-              ) {
-
-                openNoha(
-                  item.dataset.id
-                );
-
-              }
-
-            }
-          );
-
-        });
-
     }
+  );
 
-
-    cleanButton.addEventListener(
-      "click",
-      runSearch
-    );
-
-
-    searchInput.addEventListener(
-      "keydown",
-      (event) => {
-
-        if (
-          event.key === "Enter"
-        ) {
-
-          event.preventDefault();
-
-          runSearch();
-
-        }
-
-      }
-    );
-
-  }
-
-
-  if (
-    document.readyState ===
-    "loading"
-  ) {
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      initSearchResults
-    );
-
-  } else {
-
-    initSearchResults();
-
-  }
-
-})();
+}
