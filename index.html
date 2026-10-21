@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="theme-color"
+    content="#06090b"
+  >
+
+  <meta
+    name="description"
+    content="Hussaini Noha Khuwan - Noha Lyrics Library"
+  >
+
+  <link
+    rel="manifest"
+    href="manifest.json"
+  >
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+  <title>
+    Hussaini Noha Khuwan
+  </title>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================
+     HEADER
+========================= -->
+
+<header class="topbar">
+
+  <a
+    class="brand"
+    href="./"
+  >
+
+    <img
+      src="logo.png"
+      alt="Hussaini Noha Khuwan Logo"
+    >
+
+    <span>
+
+      <b>
+        Hussaini Noha Khuwan
+      </b>
+
+      <small>
+        Noha Lyrics Library
+      </small>
+
+    </span>
+
+  </a>
+
+
+  <nav>
+
+    <a
+      class="active"
+      href="./"
+    >
+      Home
+    </a>
+
+    <a href="#categories">
+      Categories
+    </a>
+
+    <a href="#recent">
+      Recent
+    </a>
+
+    <a href="#favorites">
+      Favorites
+    </a>
+
+    <a href="admin.html">
+      Admin
+    </a>
+
+  </nav>
+
+
+  <button
+    id="themeBtn"
+    class="iconbtn"
+    title="Toggle theme"
+  >
+    ☾
+  </button>
+
+</header>
+
+
+
+<!-- =========================
+     MAIN
+========================= -->
+
+<main>
+
+
+  <!-- HERO -->
+
+  <section class="hero">
+
+    <div class="hero-bg"></div>
+
+
+    <div class="hero-content">
+
+
+      <div class="hero-logo">
+
+        <img
+          src="logo.png"
+          alt="Hussaini Noha Khuwan"
+        >
+
+      </div>
+
+
+      <h1>
+
+        <span>
+          Hussaini
+        </span>
+
+        <strong>
+          Noha Khuwan
+        </strong>
+
+      </h1>
+
+
+      <p class="hero-subtitle">
+        Noha Lyrics Library
+      </p>
+
+
+      <p class="hero-description">
+        Search and explore the sacred nohas of Karbala
+      </p>
+
+
+      <!-- SEARCH -->
+
+      <div class="searchbox">
+
+        <span class="search-icon">
+          ⌕
+        </span>
+
+
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="Search noha by title or keyword..."
+          autocomplete="off"
+        >
+
+
+        <button id="searchBtn">
+          Search →
+        </button>
+
+
+        <!-- SEARCH SUGGESTIONS
+             ARE CREATED BY JAVASCRIPT -->
+
+      </div>
+
+
+      <!-- FILTERS -->
+
+      <div
+        id="filters"
+        class="filters"
+      ></div>
+
+
+    </div>
+
+  </section>
+
+
+
+  <!-- =========================
+       FEATURED
+  ========================= -->
+
+  <section
+    class="section"
+    id="featured"
+  >
+
+    <div class="section-title">
+
+      <h2>
+        Featured Nohay
+      </h2>
+
+
+      <a href="#recent">
+        View All →
+      </a>
+
+    </div>
+
+
+    <div
+      id="featuredGrid"
+      class="cards"
+    ></div>
+
+  </section>
+
+
+
+  <!-- =========================
+       LOWER AREA
+  ========================= -->
+
+  <section
+    class="lower"
+    id="categories"
+  >
+
+
+    <!-- CATEGORIES -->
+
+    <aside class="panel">
+
+      <div class="section-title">
+
+        <h2>
+          Categories
+        </h2>
+
+      </div>
+
+
+      <div
+        id="categoryList"
+      ></div>
+
+    </aside>
+
+
+
+    <!-- RECENT -->
+
+    <section
+      class="panel"
+      id="recent"
+    >
+
+      <div class="section-title">
+
+        <h2>
+          Recent Nohay
+        </h2>
+
+      </div>
+
+
+      <div
+        id="recentList"
+        class="recent-list"
+      ></div>
+
+    </section>
+
+
+
+    <!-- DOWNLOAD -->
+
+    <aside class="panel download">
+
+      <h2>
+        Download & Offline
+      </h2>
+
+
+      <p>
+        Install Hussaini Noha Khuwan on your phone.
+        Previously loaded nohay remain available offline.
+      </p>
+
+
+      <button
+        id="installBtn"
+        class="primary wide"
+        hidden
+      >
+        ↓ Install App
+      </button>
+
+
+      <div class="offline-note">
+        ● Offline support enabled
+      </div>
+
+    </aside>
+
+
+  </section>
+
+
+
+  <!-- =========================
+       FAVORITES
+  ========================= -->
+
+  <section
+    class="section"
+    id="favorites"
+  >
+
+    <div class="section-title">
+
+      <h2>
+        ❤️ My Favorites
+      </h2>
+
+
+      <span id="favoriteCount">
+        0 saved
+      </span>
+
+    </div>
+
+
+    <div
+      id="favoritesGrid"
+      class="cards"
+    ></div>
+
+  </section>
+
+
+</main>
+
+
+
+<!-- =========================
+     FOOTER
+========================= -->
+
+<footer>
+
+  <img
+    src="logo.png"
+    alt="Logo"
+  >
+
+
+  <span>
+    Hussaini Noha Khuwan • Noha Lyrics Library
+  </span>
+
+</footer>
+
+
+
+<!-- =========================
+     NOHA DETAIL MODAL
+========================= -->
+
+<div
+  id="modal"
+  class="modal hidden"
+>
+
+  <div class="modal-box">
+
+
+    <button
+      id="closeModal"
+      class="close"
+      aria-label="Close"
+    >
+      ×
+    </button>
+
+
+    <div
+      id="modalContent"
+    ></div>
+
+
+  </div>
+
+</div>
+
+
+
+<!-- =========================
+     FULLSCREEN IMAGE VIEWER
+========================= -->
+
+<div
+  id="imageViewer"
+  class="image-viewer hidden"
+>
+
+
+  <!-- CLOSE -->
+
+  <button
+    id="closeImageViewer"
+    class="image-viewer-close"
+    aria-label="Close image"
+  >
+    ×
+  </button>
+
+
+
+  <!-- PREVIOUS -->
+
+  <button
+    id="prevNoha"
+    class="image-nav prev"
+    aria-label="Previous Noha"
+  >
+    ‹
+  </button>
+
+
+
+  <!-- IMAGE -->
+
+  <div class="image-viewer-content">
+
+    <img
+      id="fullLyricsImage"
+      src=""
+      alt="Lyrics"
+    >
+
+  </div>
+
+
+
+  <!-- NEXT -->
+
+  <button
+    id="nextNoha"
+    class="image-nav next"
+    aria-label="Next Noha"
+  >
+    ›
+  </button>
+
+
+
+  <!-- ZOOM -->
+
+  <div class="zoom-controls">
+
+    <button
+      id="zoomOut"
+      title="Zoom out"
+    >
+      −
+    </button>
+
+
+    <span id="zoomLevel">
+      100%
+    </span>
+
+
+    <button
+      id="zoomIn"
+      title="Zoom in"
+    >
+      +
+    </button>
+
+  </div>
+
+
+</div>
+
+
+
+<!-- APP JS -->
+
+<script src="app.js"></script>
+
+
+</body>
+</html>

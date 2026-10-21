@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Admin • Hussaini Noha Khuwan</title>
+
+  <link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+
+  <div class="admin-wrap">
+
+    <div class="admin-card">
+
+      <div class="admin-brand">
+        <img src="logo.png" alt="Hussaini Noha Khuwan">
+
+        <div>
+          <h1>Hussaini Noha Khuwan</h1>
+          <small>Admin Panel</small>
+        </div>
+      </div>
+
+
+      <!-- LOGIN -->
+
+      <section id="loginBox">
+
+        <h2>🔐 Admin Login</h2>
+
+        <input
+          id="email"
+          type="email"
+          placeholder="Admin email"
+        >
+
+        <input
+          id="password"
+          type="password"
+          placeholder="Password"
+        >
+
+        <button id="loginBtn">
+          Login
+        </button>
+
+        <p id="loginMsg"></p>
+
+      </section>
+
+
+      <!-- DASHBOARD -->
+
+      <section id="dashboard" class="hidden">
+
+        <div class="dash-head">
+          <h2>Dashboard</h2>
+
+          <button id="logoutBtn">
+            Logout
+          </button>
+        </div>
+
+
+        <div class="stats">
+          <div>
+            <b id="total">0</b>
+            <span>Total Nohay</span>
+          </div>
+        </div>
+
+
+        <!-- NOHA FORM -->
+
+        <form id="nohaForm">
+
+          <input
+            type="hidden"
+            id="editId"
+          >
+
+
+          <label>
+            Title / Noha Name *
+          </label>
+
+          <input
+            id="title"
+            required
+            placeholder="For example: Ab Mujhe Koi Sakina Nahi Kehta Baba"
+          >
+
+
+          <!-- CATEGORY -->
+
+          <label>
+            Category
+          </label>
+
+          <select id="category">
+
+            <option value="Muharram">Muharram</option>
+            <option value="Ayyam-e-Ali">Ayyam-e-Ali</option>
+            <option value="Ayyam-e-Fatmiya">Ayyam-e-Fatmiya</option>
+            <option value="Other">Other</option>
+
+          </select>
+
+
+          <input
+            id="customCategory"
+            class="hidden"
+            type="text"
+            placeholder="Enter your own category"
+          >
+
+
+          <!-- LYRICS IMAGE -->
+
+          <label>
+            Lyrics Image *
+          </label>
+
+          <input
+            id="image"
+            type="file"
+            accept="image/*"
+          >
+
+          <div id="preview"></div>
+
+
+          <!-- URDU LYRICS -->
+
+          <label>
+            Urdu Lyrics
+            <small>(optional)</small>
+          </label>
+
+          <textarea
+            id="lyrics"
+            rows="9"
+            placeholder="Paste Urdu lyrics here..."
+          ></textarea>
+
+
+          <!-- ROMAN SEARCH -->
+
+          <label>
+            Roman Search Keywords
+          </label>
+
+          <input
+            id="keywords"
+            placeholder="ali akbar, aliakbar, akber, sakina"
+          >
+
+
+          <button
+            id="saveBtn"
+            type="submit"
+          >
+            💾 Save Noha
+          </button>
+
+
+          <button
+            id="cancelEdit"
+            type="button"
+            class="secondary hidden"
+          >
+            Cancel Edit
+          </button>
+
+        </form>
+
+
+        <hr>
+
+
+        <h2>Existing Nohay</h2>
+
+        <div id="adminList"></div>
+
+      </section>
+
+    </div>
+
+  </div>
+
+
+  <script src="admin.js"></script>
+
+</body>
+</html>
