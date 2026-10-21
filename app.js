@@ -1527,3 +1527,258 @@ function setupServiceWorker() {
   }
 
 }
+/* =========================================================
+   SEARCH RESULTS BELOW SEARCH BAR
+   ========================================================= */
+
+(function setupDirectSearchResults() {
+
+  function initSearchResults() {
+
+    const searchInput =
+      document.getElementById("searchInput");
+
+    const searchButton =
+      document.getElementById("searchBtn");
+
+    const searchBox =
+      document.querySelector(".searchbox");
+
+    if (!searchInput || !searchButton || !searchBox) {
+      return;
+    }
+
+
+    /* Remove old button listeners */
+    const cleanButton =
+      searchButton.cloneNode(true);
+
+    searchButton.replaceWith(cleanButton);
+
+
+    /* Create result container */
+    let resultsBox =
+      document.getElementById(
+        "directSearchResults"
+      );
+
+
+    if (!resultsBox) {
+
+      resultsBox =
+        document.createElement("div");
+
+      resultsBox.id =
+        "directSearchResults";
+
+      resultsBox.className =
+        "search-results-box hidden";
+
+      searchBox.insertAdjacentElement(
+        "afterend",
+        resultsBox
+      );
+
+    }
+
+
+    function runSearch() {
+
+      const query =
+        searchInput.value
+          .trim()
+          .toLowerCase();
+
+
+      if (!query) {
+
+        resultsBox.classList.add(
+          "hidden"
+        );
+
+        resultsBox.innerHTML = "";
+
+        return;
+
+      }
+
+
+      const results =
+        (typeof nohay !== "undefined"
+          ? nohay
+          : []
+        ).filter((noha) => {
+
+          const searchable = [
+
+            noha.title || "",
+
+            noha.reciter || "",
+
+            noha.keywords || "",
+
+            noha.category || ""
+
+          ]
+            .join(" ")
+            .toLowerCase();
+
+
+          return searchable.includes(
+            query
+          );
+
+        });
+
+
+      resultsBox.classList.remove(
+        "hidden"
+      );
+
+
+      if (!results.length) {
+
+        resultsBox.innerHTML = `
+
+          <div class="search-results-empty">
+
+            Noha nahi mila for
+            <strong>
+              "${escapeHtml(query)}"
+            </strong>
+
+          </div>
+
+        `;
+
+        return;
+
+      }
+
+
+      resultsBox.innerHTML =
+
+        results
+          .slice(0, 8)
+          .map((noha) => {
+
+            return `
+
+              <div
+                class="search-result-item"
+                data-id="${escapeHtml(noha.id)}"
+              >
+
+                <div class="search-result-icon">
+                  ♪
+                </div>
+
+                <div class="search-result-info">
+
+                  <div class="search-result-title">
+                    ${escapeHtml(
+                      noha.title
+                    )}
+                  </div>
+
+                  <div class="search-result-meta">
+                    ${escapeHtml(
+                      noha.reciter ||
+                      "Hussaini Noha Khuwan"
+                    )}
+                  </div>
+
+                  <span class="search-result-category">
+                    ${escapeHtml(
+                      noha.category ||
+                      "Other"
+                    )}
+                  </span>
+
+                </div>
+
+                <div class="search-result-arrow">
+                  →
+                </div>
+
+              </div>
+
+            `;
+
+          })
+          .join("");
+
+
+      /* Click result → open full Noha */
+      resultsBox
+        .querySelectorAll(
+          ".search-result-item"
+        )
+        .forEach((item) => {
+
+          item.addEventListener(
+            "click",
+            () => {
+
+              if (
+                typeof openNoha ===
+                "function"
+              ) {
+
+                openNoha(
+                  item.dataset.id
+                );
+
+              }
+
+            }
+          );
+
+        });
+
+    }
+
+
+    cleanButton.addEventListener(
+      "click",
+      runSearch
+    );
+
+
+    searchInput.addEventListener(
+      "keydown",
+      (event) => {
+
+        if (
+          event.key === "Enter"
+        ) {
+
+          event.preventDefault();
+
+          runSearch();
+
+        }
+
+      }
+    );
+
+  }
+
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      initSearchResults
+    );
+
+  } else {
+
+    initSearchResults();
+
+  }
+
+})();
