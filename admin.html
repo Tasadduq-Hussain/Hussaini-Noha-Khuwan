@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="theme-color"
+    content="#06090b"
+  >
+
+  <title>Admin — Hussaini Noha Khuwan</title>
+
+  <link
+    rel="stylesheet"
+    href="admin.css"
+  >
+</head>
+
+<body>
+
+<!-- =====================================================
+     LOGIN SCREEN
+====================================================== -->
+
+<section
+  id="loginScreen"
+  class="login-screen"
+>
+
+  <div class="login-card">
+
+    <div class="login-logo">
+      <img
+        src="logo.png"
+        alt="Hussaini Noha Khuwan"
+      >
+    </div>
+
+    <span class="eyebrow">
+      ADMIN PANEL
+    </span>
+
+    <h1>
+      Hussaini Noha Khuwan
+    </h1>
+
+    <p>
+      Sign in to manage your Noha library.
+    </p>
+
+    <form id="loginForm">
+
+      <label for="email">
+        Email
+      </label>
+
+      <input
+        id="email"
+        type="email"
+        placeholder="Admin email"
+        autocomplete="email"
+        required
+      >
+
+      <label for="password">
+        Password
+      </label>
+
+      <input
+        id="password"
+        type="password"
+        placeholder="Password"
+        autocomplete="current-password"
+        required
+      >
+
+      <button
+        type="submit"
+        class="primary-btn"
+      >
+        Sign In
+      </button>
+
+    </form>
+
+    <div
+      id="loginMessage"
+      class="message"
+    ></div>
+
+    <a
+      href="index.html"
+      class="back-link"
+    >
+      ← Back to website
+    </a>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     ADMIN APP
+====================================================== -->
+
+<div
+  id="adminApp"
+  class="admin-app hidden"
+>
+
+  <!-- SIDEBAR -->
+
+  <aside class="sidebar">
+
+    <div class="sidebar-brand">
+
+      <img
+        src="logo.png"
+        alt="Logo"
+      >
+
+      <div>
+        <strong>
+          Hussaini
+        </strong>
+
+        <small>
+          Admin Panel
+        </small>
+      </div>
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+      <button
+        class="nav-item active"
+        data-section="dashboard"
+        type="button"
+      >
+        <span>⌂</span>
+        Dashboard
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-section="manage"
+        type="button"
+      >
+        <span>☷</span>
+        Manage Nohay
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-section="add"
+        type="button"
+      >
+        <span>＋</span>
+        Add Noha
+      </button>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+      <a
+        href="index.html"
+        class="sidebar-link"
+      >
+        ↗ View Website
+      </a>
+
+
+      <button
+        id="logoutBtn"
+        class="logout-btn"
+        type="button"
+      >
+        ↪ Sign Out
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <!-- MAIN -->
+
+  <main class="admin-main">
+
+    <header class="admin-header">
+
+      <div>
+
+        <span class="eyebrow">
+          HUSSAINI NOHA KHUWAN
+        </span>
+
+        <h1 id="pageTitle">
+          Dashboard
+        </h1>
+
+      </div>
+
+
+      <div class="header-actions">
+
+        <span
+          id="adminEmail"
+          class="admin-email"
+        ></span>
+
+        <button
+          id="mobileMenuBtn"
+          class="mobile-menu-btn"
+          type="button"
+        >
+          ☰
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <!-- DASHBOARD -->
+
+    <section
+      id="dashboardSection"
+      class="admin-section"
+    >
+
+      <div class="stats-grid">
+
+        <div class="stat-card">
+
+          <span class="stat-icon">
+            ♪
+          </span>
+
+          <div>
+
+            <small>
+              Total Nohay
+            </small>
+
+            <strong id="totalNohay">
+              0
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span class="stat-icon">
+            ◈
+          </span>
+
+          <div>
+
+            <small>
+              Categories
+            </small>
+
+            <strong id="totalCategories">
+              0
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span class="stat-icon">
+            ★
+          </span>
+
+          <div>
+
+            <small>
+              Favorites
+            </small>
+
+            <strong id="totalFavorites">
+              0
+            </strong>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="dashboard-grid">
+
+        <div class="admin-card">
+
+          <div class="card-heading">
+
+            <div>
+
+              <span class="eyebrow">
+                LIBRARY
+              </span>
+
+              <h2>
+                Recent Nohay
+              </h2>
+
+            </div>
+
+            <button
+              class="small-btn"
+              data-go="manage"
+              type="button"
+            >
+              Manage →
+            </button>
+
+          </div>
+
+
+          <div
+            id="dashboardRecent"
+            class="dashboard-list"
+          ></div>
+
+        </div>
+
+
+        <div class="admin-card">
+
+          <div class="card-heading">
+
+            <div>
+
+              <span class="eyebrow">
+                QUICK ACTION
+              </span>
+
+              <h2>
+                Add New Noha
+              </h2>
+
+            </div>
+
+          </div>
+
+
+          <p class="muted">
+            Add a new Noha with its title, category,
+            reciter, lyrics and lyrics image.
+          </p>
+
+
+          <button
+            class="primary-btn"
+            data-go="add"
+            type="button"
+          >
+            ＋ Add Noha
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- MANAGE -->
+
+    <section
+      id="manageSection"
+      class="admin-section hidden"
+    >
+
+      <div class="section-toolbar">
+
+        <div>
+
+          <span class="eyebrow">
+            LIBRARY
+          </span>
+
+          <h2>
+            Manage Nohay
+          </h2>
+
+        </div>
+
+
+        <button
+          class="primary-btn"
+          data-go="add"
+          type="button"
+        >
+          ＋ Add Noha
+        </button>
+
+      </div>
+
+
+      <div class="manage-tools">
+
+        <div class="admin-search">
+
+          <span>
+            ⌕
+          </span>
+
+          <input
+            id="adminSearch"
+            type="search"
+            placeholder="Search nohay..."
+            autocomplete="off"
+          >
+
+        </div>
+
+
+        <select id="adminCategoryFilter">
+
+          <option value="All">
+            All Categories
+          </option>
+
+          <option value="Bibi Fatima (S.A)">
+            Bibi Fatima (S.A)
+          </option>
+
+          <option value="Imam Hussain (A.S)">
+            Imam Hussain (A.S)
+          </option>
+
+          <option value="Imam Ali (A.S)">
+            Imam Ali (A.S)
+          </option>
+
+          <option value="Other">
+            Other
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div
+        id="nohaTable"
+        class="noha-table"
+      ></div>
+
+    </section>
+
+
+    <!-- ADD / EDIT -->
+
+    <section
+      id="addSection"
+      class="admin-section hidden"
+    >
+
+      <div class="section-toolbar">
+
+        <div>
+
+          <span class="eyebrow">
+            LIBRARY EDITOR
+          </span>
+
+          <h2 id="formTitle">
+            Add New Noha
+          </h2>
+
+        </div>
+
+
+        <button
+          id="cancelEditBtn"
+          class="secondary-btn"
+          type="button"
+        >
+          Cancel
+        </button>
+
+      </div>
+
+
+      <form
+        id="nohaForm"
+        class="editor-card"
+      >
+
+        <input
+          id="nohaId"
+          type="hidden"
+        >
+
+
+        <div class="form-grid">
+
+          <div class="form-group full">
+
+            <label for="nohaTitle">
+              Noha Title
+            </label>
+
+            <input
+              id="nohaTitle"
+              type="text"
+              placeholder="Enter Noha title"
+              required
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="nohaReciter">
+              Reciter / Noha Khuwan
+            </label>
+
+            <input
+              id="nohaReciter"
+              type="text"
+              placeholder="e.g. Hussaini Noha Khuwan"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="nohaCategory">
+              Category
+            </label>
+
+            <select
+              id="nohaCategory"
+              required
+            >
+
+              <option value="">
+                Select category
+              </option>
+
+              <option value="Bibi Fatima (S.A)">
+                Bibi Fatima (S.A)
+              </option>
+
+              <option value="Imam Hussain (A.S)">
+                Imam Hussain (A.S)
+              </option>
+
+              <option value="Imam Ali (A.S)">
+                Imam Ali (A.S)
+              </option>
+
+              <option value="Other">
+                Other
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="form-group full">
+
+            <label for="nohaKeywords">
+              Search Keywords
+            </label>
+
+            <input
+              id="nohaKeywords"
+              type="text"
+              placeholder="Roman Urdu keywords, separated by commas"
+            >
+
+            <small>
+              Example: ali akbar, karbala, asghar, shahadat
+            </small>
+
+          </div>
+
+
+          <div class="form-group full">
+
+            <label for="nohaLyrics">
+              Lyrics
+            </label>
+
+            <textarea
+              id="nohaLyrics"
+              rows="8"
+              placeholder="Enter lyrics..."
+            ></textarea>
+
+          </div>
+
+
+          <div class="form-group full">
+
+            <label>
+              Lyrics Image
+            </label>
+
+
+            <div
+              id="currentImage"
+              class="current-image hidden"
+            ></div>
+
+
+            <label
+              for="nohaImage"
+              class="upload-box"
+            >
+
+              <span class="upload-icon">
+                ↑
+              </span>
+
+              <strong>
+                Choose lyrics image
+              </strong>
+
+              <small>
+                JPG, PNG or WEBP
+              </small>
+
+              <input
+                id="nohaImage"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+              >
+
+            </label>
+
+
+            <div
+              id="uploadPreview"
+              class="upload-preview"
+            ></div>
+
+          </div>
+
+        </div>
+
+
+        <div class="form-actions">
+
+          <button
+            id="resetFormBtn"
+            type="button"
+            class="secondary-btn"
+          >
+            Clear
+          </button>
+
+
+          <button
+            type="submit"
+            class="primary-btn"
+          >
+
+            <span id="saveBtnText">
+              Save Noha
+            </span>
+
+          </button>
+
+        </div>
+
+
+        <div
+          id="formMessage"
+          class="message"
+        ></div>
+
+      </form>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<!-- DELETE MODAL -->
+
+<div
+  id="deleteModal"
+  class="confirm-modal hidden"
+>
+
+  <div class="confirm-box">
+
+    <div class="danger-icon">
+      !
+    </div>
+
+
+    <h2>
+      Delete Noha?
+    </h2>
+
+
+    <p>
+      This action cannot be undone.
+      The Noha and its associated image will be removed.
+    </p>
+
+
+    <div class="confirm-actions">
+
+      <button
+        id="cancelDelete"
+        class="secondary-btn"
+        type="button"
+      >
+        Cancel
+      </button>
+
+
+      <button
+        id="confirmDelete"
+        class="danger-btn"
+        type="button"
+      >
+        Delete
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- SUPABASE -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="admin.js"></script>
+
+
+<!-- SUCCESS TOAST -->
+
+<div
+  id="successToast"
+  class="success-toast"
+>
+
+  <div class="success-toast-icon">
+    ✓
+  </div>
+
+
+  <div class="success-toast-content">
+
+    <strong>
+      Noha Added Successfully
+    </strong>
+
+    <span>
+      Your Noha has been saved successfully.
+    </span>
+
+  </div>
+
+
+  <button
+    type="button"
+    id="closeSuccessToast"
+    class="success-toast-close"
+  >
+    ×
+  </button>
+
+</div>
+
+</body>
+</html>

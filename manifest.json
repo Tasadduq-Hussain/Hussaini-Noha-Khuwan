@@ -1,0 +1,10 @@
+{
+  "name":"Hussaini Noha Khuwan",
+  "short_name":"Hussaini Noha",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#06090b",
+  "theme_color":"#ed1c2e",
+  "description":"Hussaini Noha Khuwan - Noha Lyrics Library",
+  "icons":[{"src":"logo.png","sizes":"192x192","type":"image/png"},{"src":"logo.png","sizes":"512x512","type":"image/png"}]
+}
