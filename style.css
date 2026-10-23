@@ -2603,3 +2603,152 @@ body.light footer {
   }
 
 }
+/* =========================================
+   MOBILE HEADER MENU
+   ========================================= */
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.menu-btn {
+  display: none;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 10px;
+  background: rgba(255,255,255,.045);
+  color: #fff;
+  font-size: 21px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mobile-nav {
+  display: none;
+}
+
+
+/* MOBILE */
+@media (max-width: 760px) {
+
+  .topbar {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .desktop-nav {
+    display: none !important;
+  }
+
+  .brand span {
+    display: block;
+  }
+
+  .brand b {
+    font-size: 13px;
+  }
+
+  .brand small {
+    font-size: 10px;
+  }
+
+  .menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-nav {
+
+    position: fixed;
+
+    z-index: 9999;
+
+    top: 66px;
+
+    left: 12px;
+    right: 12px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    padding: 8px;
+
+    background: rgba(12,14,16,.98);
+
+    border: 1px solid rgba(255,255,255,.10);
+
+    border-radius: 14px;
+
+    box-shadow:
+      0 18px 45px rgba(0,0,0,.45);
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    transform: translateY(-8px);
+
+    pointer-events: none;
+
+    transition:
+      opacity .18s ease,
+      transform .18s ease,
+      visibility .18s ease;
+  }
+
+  .mobile-nav.open {
+
+    opacity: 1;
+
+    visibility: visible;
+
+    transform: translateY(0);
+
+    pointer-events: auto;
+  }
+
+  .mobile-nav a {
+
+    display: flex;
+
+    align-items: center;
+
+    min-height: 46px;
+
+    padding: 0 14px;
+
+    color: rgba(255,255,255,.88);
+
+    text-decoration: none;
+
+    border-radius: 9px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+  }
+
+  .mobile-nav a:hover,
+  .mobile-nav a:active {
+
+    background: rgba(190,25,38,.14);
+
+    color: #fff;
+  }
+}
+
+
+/* DESKTOP */
+@media (min-width: 761px) {
+
+  .mobile-nav {
+    display: none !important;
+  }
+
+}

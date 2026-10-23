@@ -41,71 +41,68 @@
      HEADER
 ===================================================== -->
 
-<header class="topbar">
-
-  <a
-    href="./"
-    class="brand"
-  >
-
-    <img
-      src="logo.png"
-      alt="Hussaini Noha Khuwan"
-    >
+<header class="topbar" dir="ltr">
+  <a class="brand" href="./">
+    <img src="logo.png" alt="Hussaini Noha Khuwan">
 
     <span>
-
-      <b>
-        Hussaini Noha Khuwan
-      </b>
-
-      <small>
-        Noha Lyrics Library
-      </small>
-
+      <b>Hussaini Noha Khuwan</b>
+      <small>Noha Lyrics Library</small>
     </span>
-
   </a>
 
-
-  <nav>
-
-    <a
-      href="./"
-      class="active"
-    >
-      Home
-    </a>
-
-    <a href="#categories">
-      Categories
-    </a>
-
-    <a href="#recent">
-      Recent
-    </a>
-
-    <a href="#favorites">
-      Favorites
-    </a>
-
-    <a href="admin.html">
-      Admin
-    </a>
-
+  <nav class="desktop-nav">
+    <a class="active" href="./">Home</a>
+    <a href="#categories">Categories</a>
+    <a href="#recent">Recent</a>
+    <a href="#favorites">Favorites</a>
+    <a href="admin.html">Admin</a>
   </nav>
 
+  <div class="topbar-actions">
 
-  <button
-    id="themeBtn"
-    class="iconbtn"
-    type="button"
-    title="Toggle theme"
-  >
-    ☾
-  </button>
+    <button
+      id="themeBtn"
+      class="iconbtn"
+      title="Theme"
+      type="button"
+    >☾</button>
 
+    <button
+      id="mobileMenuBtn"
+      class="menu-btn"
+      type="button"
+      aria-label="Open menu"
+      aria-expanded="false"
+    >☰</button>
+
+  </div>
 </header>
+
+<!-- MOBILE MENU -->
+<div id="mobileNav" class="mobile-nav" dir="ltr">
+
+  <a href="./">
+    Home
+  </a>
+
+  <a href="#categories">
+    Categories
+  </a>
+
+  <a href="#recent">
+    Recent
+  </a>
+
+  <a href="#favorites">
+    Favorites
+  </a>
+
+  <a href="admin.html">
+    Admin
+  </a>
+
+</div>
 
 
 
@@ -555,7 +552,48 @@
 
 </div>
 
+<script>
+(function () {
 
+  const btn = document.getElementById("mobileMenuBtn");
+  const menu = document.getElementById("mobileNav");
+
+  if (!btn || !menu) return;
+
+  btn.addEventListener("click", function () {
+
+    const isOpen = menu.classList.toggle("open");
+
+    btn.setAttribute(
+      "aria-expanded",
+      String(isOpen)
+    );
+
+    btn.textContent = isOpen ? "×" : "☰";
+
+  });
+
+  menu.querySelectorAll("a").forEach(function (link) {
+
+    link.addEventListener("click", function () {
+
+      menu.classList.remove("open");
+
+      btn.setAttribute(
+        "aria-expanded",
+        "false"
+      );
+
+      btn.textContent = "☰";
+
+    });
+
+  });
+
+})();
+</script>
+
+<script src="app.js"></script>
 
 <!-- =====================================================
      APP JS
